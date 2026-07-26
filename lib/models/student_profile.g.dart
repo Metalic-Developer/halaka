@@ -1,0 +1,902 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'student_profile.dart';
+
+// **************************************************************************
+// IsarCollectionGenerator
+// **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetStudentProfileCollection on Isar {
+  IsarCollection<StudentProfile> get studentProfiles => this.collection();
+}
+
+const StudentProfileSchema = CollectionSchema(
+  name: r'StudentProfile',
+  id: 1836453813369790305,
+  properties: {
+    r'newPagesTarget': PropertySchema(
+      id: 0,
+      name: r'newPagesTarget',
+      type: IsarType.long,
+    ),
+    r'reviewPagesTarget': PropertySchema(
+      id: 1,
+      name: r'reviewPagesTarget',
+      type: IsarType.long,
+    ),
+    r'updatedAt': PropertySchema(
+      id: 2,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
+    r'userSupabaseId': PropertySchema(
+      id: 3,
+      name: r'userSupabaseId',
+      type: IsarType.string,
+    )
+  },
+  estimateSize: _studentProfileEstimateSize,
+  serialize: _studentProfileSerialize,
+  deserialize: _studentProfileDeserialize,
+  deserializeProp: _studentProfileDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'userSupabaseId': IndexSchema(
+      id: -9077314912685629511,
+      name: r'userSupabaseId',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'userSupabaseId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
+  links: {},
+  embeddedSchemas: {},
+  getId: _studentProfileGetId,
+  getLinks: _studentProfileGetLinks,
+  attach: _studentProfileAttach,
+  version: '3.1.0+1',
+);
+
+int _studentProfileEstimateSize(
+  StudentProfile object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.userSupabaseId.length * 3;
+  return bytesCount;
+}
+
+void _studentProfileSerialize(
+  StudentProfile object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.newPagesTarget);
+  writer.writeLong(offsets[1], object.reviewPagesTarget);
+  writer.writeDateTime(offsets[2], object.updatedAt);
+  writer.writeString(offsets[3], object.userSupabaseId);
+}
+
+StudentProfile _studentProfileDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = StudentProfile();
+  object.id = id;
+  object.newPagesTarget = reader.readLong(offsets[0]);
+  object.reviewPagesTarget = reader.readLong(offsets[1]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[2]);
+  object.userSupabaseId = reader.readString(offsets[3]);
+  return object;
+}
+
+P _studentProfileDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readLong(offset)) as P;
+    case 2:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _studentProfileGetId(StudentProfile object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _studentProfileGetLinks(StudentProfile object) {
+  return [];
+}
+
+void _studentProfileAttach(
+    IsarCollection<dynamic> col, Id id, StudentProfile object) {
+  object.id = id;
+}
+
+extension StudentProfileByIndex on IsarCollection<StudentProfile> {
+  Future<StudentProfile?> getByUserSupabaseId(String userSupabaseId) {
+    return getByIndex(r'userSupabaseId', [userSupabaseId]);
+  }
+
+  StudentProfile? getByUserSupabaseIdSync(String userSupabaseId) {
+    return getByIndexSync(r'userSupabaseId', [userSupabaseId]);
+  }
+
+  Future<bool> deleteByUserSupabaseId(String userSupabaseId) {
+    return deleteByIndex(r'userSupabaseId', [userSupabaseId]);
+  }
+
+  bool deleteByUserSupabaseIdSync(String userSupabaseId) {
+    return deleteByIndexSync(r'userSupabaseId', [userSupabaseId]);
+  }
+
+  Future<List<StudentProfile?>> getAllByUserSupabaseId(
+      List<String> userSupabaseIdValues) {
+    final values = userSupabaseIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'userSupabaseId', values);
+  }
+
+  List<StudentProfile?> getAllByUserSupabaseIdSync(
+      List<String> userSupabaseIdValues) {
+    final values = userSupabaseIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'userSupabaseId', values);
+  }
+
+  Future<int> deleteAllByUserSupabaseId(List<String> userSupabaseIdValues) {
+    final values = userSupabaseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'userSupabaseId', values);
+  }
+
+  int deleteAllByUserSupabaseIdSync(List<String> userSupabaseIdValues) {
+    final values = userSupabaseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'userSupabaseId', values);
+  }
+
+  Future<Id> putByUserSupabaseId(StudentProfile object) {
+    return putByIndex(r'userSupabaseId', object);
+  }
+
+  Id putByUserSupabaseIdSync(StudentProfile object, {bool saveLinks = true}) {
+    return putByIndexSync(r'userSupabaseId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByUserSupabaseId(List<StudentProfile> objects) {
+    return putAllByIndex(r'userSupabaseId', objects);
+  }
+
+  List<Id> putAllByUserSupabaseIdSync(List<StudentProfile> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'userSupabaseId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension StudentProfileQueryWhereSort
+    on QueryBuilder<StudentProfile, StudentProfile, QWhere> {
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension StudentProfileQueryWhere
+    on QueryBuilder<StudentProfile, StudentProfile, QWhereClause> {
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause> idEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause> idNotEqualTo(
+      Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause> idGreaterThan(
+      Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause> idLessThan(
+      Id id,
+      {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause> idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause>
+      userSupabaseIdEqualTo(String userSupabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'userSupabaseId',
+        value: [userSupabaseId],
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterWhereClause>
+      userSupabaseIdNotEqualTo(String userSupabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userSupabaseId',
+              lower: [],
+              upper: [userSupabaseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userSupabaseId',
+              lower: [userSupabaseId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userSupabaseId',
+              lower: [userSupabaseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'userSupabaseId',
+              lower: [],
+              upper: [userSupabaseId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+}
+
+extension StudentProfileQueryFilter
+    on QueryBuilder<StudentProfile, StudentProfile, QFilterCondition> {
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition> idEqualTo(
+      Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition> idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      newPagesTargetEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'newPagesTarget',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      newPagesTargetGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'newPagesTarget',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      newPagesTargetLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'newPagesTarget',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      newPagesTargetBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'newPagesTarget',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      reviewPagesTargetEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reviewPagesTarget',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      reviewPagesTargetGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reviewPagesTarget',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      reviewPagesTargetLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reviewPagesTarget',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      reviewPagesTargetBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reviewPagesTarget',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      updatedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'updatedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      updatedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'updatedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      updatedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      updatedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      updatedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      updatedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userSupabaseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'userSupabaseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'userSupabaseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'userSupabaseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'userSupabaseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'userSupabaseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'userSupabaseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'userSupabaseId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'userSupabaseId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterFilterCondition>
+      userSupabaseIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'userSupabaseId',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension StudentProfileQueryObject
+    on QueryBuilder<StudentProfile, StudentProfile, QFilterCondition> {}
+
+extension StudentProfileQueryLinks
+    on QueryBuilder<StudentProfile, StudentProfile, QFilterCondition> {}
+
+extension StudentProfileQuerySortBy
+    on QueryBuilder<StudentProfile, StudentProfile, QSortBy> {
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByNewPagesTarget() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'newPagesTarget', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByNewPagesTargetDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'newPagesTarget', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByReviewPagesTarget() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewPagesTarget', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByReviewPagesTargetDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewPagesTarget', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy> sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByUserSupabaseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSupabaseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      sortByUserSupabaseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSupabaseId', Sort.desc);
+    });
+  }
+}
+
+extension StudentProfileQuerySortThenBy
+    on QueryBuilder<StudentProfile, StudentProfile, QSortThenBy> {
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy> thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByNewPagesTarget() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'newPagesTarget', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByNewPagesTargetDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'newPagesTarget', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByReviewPagesTarget() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewPagesTarget', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByReviewPagesTargetDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewPagesTarget', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy> thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByUserSupabaseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSupabaseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QAfterSortBy>
+      thenByUserSupabaseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'userSupabaseId', Sort.desc);
+    });
+  }
+}
+
+extension StudentProfileQueryWhereDistinct
+    on QueryBuilder<StudentProfile, StudentProfile, QDistinct> {
+  QueryBuilder<StudentProfile, StudentProfile, QDistinct>
+      distinctByNewPagesTarget() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'newPagesTarget');
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QDistinct>
+      distinctByReviewPagesTarget() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reviewPagesTarget');
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QDistinct>
+      distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
+
+  QueryBuilder<StudentProfile, StudentProfile, QDistinct>
+      distinctByUserSupabaseId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'userSupabaseId',
+          caseSensitive: caseSensitive);
+    });
+  }
+}
+
+extension StudentProfileQueryProperty
+    on QueryBuilder<StudentProfile, StudentProfile, QQueryProperty> {
+  QueryBuilder<StudentProfile, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<StudentProfile, int, QQueryOperations> newPagesTargetProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'newPagesTarget');
+    });
+  }
+
+  QueryBuilder<StudentProfile, int, QQueryOperations>
+      reviewPagesTargetProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reviewPagesTarget');
+    });
+  }
+
+  QueryBuilder<StudentProfile, DateTime?, QQueryOperations>
+      updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
+    });
+  }
+
+  QueryBuilder<StudentProfile, String, QQueryOperations>
+      userSupabaseIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'userSupabaseId');
+    });
+  }
+}
