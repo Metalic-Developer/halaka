@@ -27,6 +27,4 @@ class IsarService {
     }
     return _isar!;
   }
-
-  // دوال عامة للإضافة/التحديث (اختياري)
 }

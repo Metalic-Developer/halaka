@@ -43,7 +43,34 @@ const GroupSchema = CollectionSchema(
   deserialize: _groupDeserialize,
   deserializeProp: _groupDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'supabaseId': IndexSchema(
+      id: 2753382765909358918,
+      name: r'supabaseId',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'supabaseId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'mosqueSupabaseId': IndexSchema(
+      id: 6028508635571499880,
+      name: r'mosqueSupabaseId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'mosqueSupabaseId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _groupGetId,
@@ -123,6 +150,61 @@ void _groupAttach(IsarCollection<dynamic> col, Id id, Group object) {
   object.id = id;
 }
 
+extension GroupByIndex on IsarCollection<Group> {
+  Future<Group?> getBySupabaseId(String supabaseId) {
+    return getByIndex(r'supabaseId', [supabaseId]);
+  }
+
+  Group? getBySupabaseIdSync(String supabaseId) {
+    return getByIndexSync(r'supabaseId', [supabaseId]);
+  }
+
+  Future<bool> deleteBySupabaseId(String supabaseId) {
+    return deleteByIndex(r'supabaseId', [supabaseId]);
+  }
+
+  bool deleteBySupabaseIdSync(String supabaseId) {
+    return deleteByIndexSync(r'supabaseId', [supabaseId]);
+  }
+
+  Future<List<Group?>> getAllBySupabaseId(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'supabaseId', values);
+  }
+
+  List<Group?> getAllBySupabaseIdSync(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'supabaseId', values);
+  }
+
+  Future<int> deleteAllBySupabaseId(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'supabaseId', values);
+  }
+
+  int deleteAllBySupabaseIdSync(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'supabaseId', values);
+  }
+
+  Future<Id> putBySupabaseId(Group object) {
+    return putByIndex(r'supabaseId', object);
+  }
+
+  Id putBySupabaseIdSync(Group object, {bool saveLinks = true}) {
+    return putByIndexSync(r'supabaseId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllBySupabaseId(List<Group> objects) {
+    return putAllByIndex(r'supabaseId', objects);
+  }
+
+  List<Id> putAllBySupabaseIdSync(List<Group> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'supabaseId', objects, saveLinks: saveLinks);
+  }
+}
+
 extension GroupQueryWhereSort on QueryBuilder<Group, Group, QWhere> {
   QueryBuilder<Group, Group, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
@@ -194,6 +276,96 @@ extension GroupQueryWhere on QueryBuilder<Group, Group, QWhereClause> {
         upper: upperId,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<Group, Group, QAfterWhereClause> supabaseIdEqualTo(
+      String supabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'supabaseId',
+        value: [supabaseId],
+      ));
+    });
+  }
+
+  QueryBuilder<Group, Group, QAfterWhereClause> supabaseIdNotEqualTo(
+      String supabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [],
+              upper: [supabaseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [supabaseId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [supabaseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [],
+              upper: [supabaseId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Group, Group, QAfterWhereClause> mosqueSupabaseIdEqualTo(
+      String mosqueSupabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'mosqueSupabaseId',
+        value: [mosqueSupabaseId],
+      ));
+    });
+  }
+
+  QueryBuilder<Group, Group, QAfterWhereClause> mosqueSupabaseIdNotEqualTo(
+      String mosqueSupabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mosqueSupabaseId',
+              lower: [],
+              upper: [mosqueSupabaseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mosqueSupabaseId',
+              lower: [mosqueSupabaseId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mosqueSupabaseId',
+              lower: [mosqueSupabaseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mosqueSupabaseId',
+              lower: [],
+              upper: [mosqueSupabaseId],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }

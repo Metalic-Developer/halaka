@@ -1,11 +1,14 @@
 import 'package:isar/isar.dart';
 
-part 'mosque.g.dart'; // سيتم إنشاؤه بواسطة build_runner
+part 'mosque.g.dart';
 
 @collection
 class Mosque {
-  Id id = Isar.autoIncrement; // رقم محلي للتعامل مع Isar
-  late String supabaseId; // uuid من Supabase
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
+  late String supabaseId;
+
   late String name;
   DateTime? createdAt;
 }

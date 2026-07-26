@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -19,17 +20,16 @@ class QuranDatabaseService {
     final databasesPath = await getDatabasesPath();
     final dbPath = join(databasesPath, 'quran.db');
 
-    final exists = await databaseExists(dbPath);
-    if (!exists) {
+    final file = File(dbPath);
+    if (!await file.exists()) {
       final data = await rootBundle.load('assets/quran.db');
       final bytes = data.buffer.asUint8List();
-      await writeDatabaseBytes(dbPath, bytes);
+      await file.writeAsBytes(bytes);
     }
 
     return await openDatabase(dbPath, readOnly: true);
   }
 
-  /// جلب قائمة السور (رقم واسم)
   Future<List<Map<String, dynamic>>> getSurahs() async {
     final db = await database;
     final result = await db.rawQuery(
@@ -38,7 +38,6 @@ class QuranDatabaseService {
     return result;
   }
 
-  /// جلب أرقام الصفحات الفريدة للآيات بين (من سورة/آية) و (إلى سورة/آية)
   Future<List<int>> getPages(
     int suraStart, int ayaStart,
     int suraEnd, int ayaEnd,
@@ -55,7 +54,6 @@ class QuranDatabaseService {
     return result.map<int>((row) => row['page'] as int).toList();
   }
 
-  /// حساب عدد الصفحات لنطاق معين
   Future<double> calculatePages(
     int suraStart, int ayaStart,
     int suraEnd, int ayaEnd,

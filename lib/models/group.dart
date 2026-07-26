@@ -5,8 +5,13 @@ part 'group.g.dart';
 @collection
 class Group {
   Id id = Isar.autoIncrement;
+
+  @Index(unique: true, replace: true)
   late String supabaseId;
-  late String mosqueSupabaseId; // العلاقة بالمسجد عبر uuid
+
+  @Index()
+  late String mosqueSupabaseId;
+
   late String name;
   DateTime? createdAt;
 }

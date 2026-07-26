@@ -7,7 +7,7 @@ class SessionPart {
   Id id = Isar.autoIncrement;
 
   @Index()
-  late int sessionLocalId;
+  late int sessionLocalId;    // نعود إلى int
 
   @Index(unique: true, replace: true)
   String? supabaseId;

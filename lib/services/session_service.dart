@@ -22,6 +22,7 @@ class SessionService {
   }) async {
     final isar = await IsarService.isar;
     final session = Session()
+      // id سيتولد تلقائيًا (autoIncrement)
       ..supabaseId = _uuid.v4()
       ..studentSupabaseId = studentSupabaseId
       ..groupSupabaseId = groupSupabaseId
@@ -42,7 +43,7 @@ class SessionService {
   }
 
   Future<void> addSessionPart({
-    required int sessionLocalId,
+    required int sessionLocalId,     // int
     required String type,
     required int suraStart,
     required int ayaStart,
@@ -74,7 +75,7 @@ class SessionService {
     });
   }
 
-  Future<void> calculateAndUpdateSessionPoints(int sessionLocalId) async {
+  Future<void> calculateAndUpdateSessionPoints(int sessionLocalId) async { // int
     final isar = await IsarService.isar;
     final session = await isar.sessions.get(sessionLocalId);
     if (session == null) return;
@@ -91,7 +92,6 @@ class SessionService {
     if (profile == null) throw DatabaseException('ملف الطالب غير موجود');
 
     double total = 0.0;
-
     if (session.earlyAttendance) total += 2;
     if (session.onTimeDeparture) total += 2;
     if (session.earlyRecitation) total += 2;

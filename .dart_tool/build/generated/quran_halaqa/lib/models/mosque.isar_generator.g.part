@@ -34,7 +34,21 @@ const MosqueSchema = CollectionSchema(
   deserialize: _mosqueDeserialize,
   deserializeProp: _mosqueDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'supabaseId': IndexSchema(
+      id: 2753382765909358918,
+      name: r'supabaseId',
+      unique: true,
+      replace: true,
+      properties: [
+        IndexPropertySchema(
+          name: r'supabaseId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _mosqueGetId,
@@ -109,6 +123,61 @@ void _mosqueAttach(IsarCollection<dynamic> col, Id id, Mosque object) {
   object.id = id;
 }
 
+extension MosqueByIndex on IsarCollection<Mosque> {
+  Future<Mosque?> getBySupabaseId(String supabaseId) {
+    return getByIndex(r'supabaseId', [supabaseId]);
+  }
+
+  Mosque? getBySupabaseIdSync(String supabaseId) {
+    return getByIndexSync(r'supabaseId', [supabaseId]);
+  }
+
+  Future<bool> deleteBySupabaseId(String supabaseId) {
+    return deleteByIndex(r'supabaseId', [supabaseId]);
+  }
+
+  bool deleteBySupabaseIdSync(String supabaseId) {
+    return deleteByIndexSync(r'supabaseId', [supabaseId]);
+  }
+
+  Future<List<Mosque?>> getAllBySupabaseId(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'supabaseId', values);
+  }
+
+  List<Mosque?> getAllBySupabaseIdSync(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'supabaseId', values);
+  }
+
+  Future<int> deleteAllBySupabaseId(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'supabaseId', values);
+  }
+
+  int deleteAllBySupabaseIdSync(List<String> supabaseIdValues) {
+    final values = supabaseIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'supabaseId', values);
+  }
+
+  Future<Id> putBySupabaseId(Mosque object) {
+    return putByIndex(r'supabaseId', object);
+  }
+
+  Id putBySupabaseIdSync(Mosque object, {bool saveLinks = true}) {
+    return putByIndexSync(r'supabaseId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllBySupabaseId(List<Mosque> objects) {
+    return putAllByIndex(r'supabaseId', objects);
+  }
+
+  List<Id> putAllBySupabaseIdSync(List<Mosque> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'supabaseId', objects, saveLinks: saveLinks);
+  }
+}
+
 extension MosqueQueryWhereSort on QueryBuilder<Mosque, Mosque, QWhere> {
   QueryBuilder<Mosque, Mosque, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
@@ -180,6 +249,51 @@ extension MosqueQueryWhere on QueryBuilder<Mosque, Mosque, QWhereClause> {
         upper: upperId,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<Mosque, Mosque, QAfterWhereClause> supabaseIdEqualTo(
+      String supabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'supabaseId',
+        value: [supabaseId],
+      ));
+    });
+  }
+
+  QueryBuilder<Mosque, Mosque, QAfterWhereClause> supabaseIdNotEqualTo(
+      String supabaseId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [],
+              upper: [supabaseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [supabaseId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [supabaseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'supabaseId',
+              lower: [],
+              upper: [supabaseId],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }

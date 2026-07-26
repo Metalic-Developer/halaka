@@ -12,14 +12,14 @@ class StudentController {
 
   Future<StudentProfile?> getMyProfile(String userSupabaseId) async {
     final isar = await IsarService.isar;
-    return isar.studentProfiles.where().userSupabaseIdEqualTo(userSupabaseId).findFirst();
+    final result = await isar.studentProfiles.filter().userSupabaseIdEqualTo(userSupabaseId).findAll();
+    return result.isNotEmpty ? result.first : null;
   }
 
   Future<List<Session>> getWeeklySessions(String studentSupabaseId, DateTime weekStart) async {
     final isar = await IsarService.isar;
     final end = weekStart.add(const Duration(days: 5));
-    return isar.sessions
-        .where()
+    return isar.sessions.filter()
         .studentSupabaseIdEqualTo(studentSupabaseId)
         .and()
         .sessionDateBetween(weekStart, end)
@@ -28,8 +28,7 @@ class StudentController {
 
   Future<List<Map<String, dynamic>>> getWeeklyLeaderboard(String groupSupabaseId, DateTime weekStart) async {
     final isar = await IsarService.isar;
-    final students = await isar.users
-        .where()
+    final students = await isar.users.filter()
         .roleEqualTo('student')
         .and()
         .groupSupabaseIdEqualTo(groupSupabaseId)
@@ -39,8 +38,7 @@ class StudentController {
     final leaderboard = <Map<String, dynamic>>[];
     for (var student in students) {
       double total = 0;
-      final sessions = await isar.sessions
-          .where()
+      final sessions = await isar.sessions.filter()
           .studentSupabaseIdEqualTo(student.supabaseId)
           .and()
           .sessionDateBetween(weekStart, end)

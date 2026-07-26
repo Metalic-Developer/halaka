@@ -1,15 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 import '../models/session.dart';
-import '../models/session_part.dart';
 import '../models/student_profile.dart';
 import '../models/user.dart';
 import '../services/isar_service.dart';
 import '../services/session_service.dart';
-import '../core/exceptions.dart';
 
 final sessionServiceProvider = Provider<SessionService>((ref) => SessionService());
-
 final teacherProvider = Provider<TeacherController>((ref) => TeacherController(ref));
 
 class TeacherController {
@@ -18,30 +14,25 @@ class TeacherController {
 
   SessionService get _sessionService => _ref.read(sessionServiceProvider);
 
-  // جلب طلاب المجموعة الحالية (من Isar)
   Future<List<User>> getGroupStudents(String groupSupabaseId) async {
     final isar = await IsarService.isar;
-    return isar.users
-        .where()
+    return isar.users.filter()
         .roleEqualTo('student')
         .and()
         .groupSupabaseIdEqualTo(groupSupabaseId)
         .findAll();
   }
 
-  // الحصول على جلسات الأسبوع لطالب
   Future<List<Session>> getStudentWeeklySessions(String studentSupabaseId, DateTime weekStart) async {
     final isar = await IsarService.isar;
     final end = weekStart.add(const Duration(days: 5));
-    return isar.sessions
-        .where()
+    return isar.sessions.filter()
         .studentSupabaseIdEqualTo(studentSupabaseId)
         .and()
         .sessionDateBetween(weekStart, end)
         .findAll();
   }
 
-  // إنشاء جلسة جديدة (محلي)
   Future<Session> createSession({
     required String studentSupabaseId,
     required String groupSupabaseId,
@@ -64,9 +55,8 @@ class TeacherController {
     );
   }
 
-  // إضافة جزء تسميع
   Future<void> addSessionPart({
-    required int sessionLocalId,
+    required int sessionLocalId,   // int
     required String type,
     required int suraStart,
     required int ayaStart,
@@ -89,14 +79,13 @@ class TeacherController {
     );
   }
 
-  // حساب النقاط بعد إضافة الأجزاء
   Future<void> calculateSessionPoints(int sessionLocalId) async {
     await _sessionService.calculateAndUpdateSessionPoints(sessionLocalId);
   }
 
-  // الحصول على ورد الطالب
   Future<StudentProfile?> getStudentProfile(String userSupabaseId) async {
     final isar = await IsarService.isar;
-    return isar.studentProfiles.where().userSupabaseIdEqualTo(userSupabaseId).findFirst();
+    final result = await isar.studentProfiles.filter().userSupabaseIdEqualTo(userSupabaseId).findAll();
+    return result.isNotEmpty ? result.first : null;
   }
 }

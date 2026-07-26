@@ -2,8 +2,58 @@ import 'package:flutter/material.dart';
 import '../services/quran_database_service.dart';
 import 'searchable_dropdown.dart';
 
-// ... SessionPartWidgetController، SessionPartData كما هي بدون تغيير
+// ---------------------- Controller & Data ----------------------
+class SessionPartWidgetController {
+  final TextEditingController surahStartCtrl = TextEditingController();
+  final TextEditingController ayaStartCtrl = TextEditingController();
+  final TextEditingController surahEndCtrl = TextEditingController();
+  final TextEditingController ayaEndCtrl = TextEditingController();
+  String? evaluation;
+  final TextEditingController notesCtrl = TextEditingController();
+  bool isExtra = false;
 
+  SessionPartData? getData() {
+    final sStart = int.tryParse(surahStartCtrl.text);
+    final aStart = int.tryParse(ayaStartCtrl.text);
+    final sEnd = int.tryParse(surahEndCtrl.text);
+    final aEnd = int.tryParse(ayaEndCtrl.text);
+    if (sStart == null || aStart == null || sEnd == null || aEnd == null) return null;
+    return SessionPartData(
+      suraStart: sStart,
+      ayaStart: aStart,
+      suraEnd: sEnd,
+      ayaEnd: aEnd,
+      evaluation: evaluation,
+      notes: notesCtrl.text,
+      isExtra: isExtra,
+    );
+  }
+
+  void dispose() {
+    surahStartCtrl.dispose();
+    ayaStartCtrl.dispose();
+    surahEndCtrl.dispose();
+    ayaEndCtrl.dispose();
+    notesCtrl.dispose();
+  }
+}
+
+class SessionPartData {
+  final int suraStart;
+  final int ayaStart;
+  final int suraEnd;
+  final int ayaEnd;
+  final String? evaluation;
+  final String? notes;
+  final bool isExtra;
+  SessionPartData({
+    required this.suraStart, required this.ayaStart,
+    required this.suraEnd, required this.ayaEnd,
+    this.evaluation, this.notes, required this.isExtra,
+  });
+}
+
+// ---------------------- Widget ----------------------
 class SessionPartWidget extends StatefulWidget {
   final SessionPartWidgetController controller;
   final bool isExtra;

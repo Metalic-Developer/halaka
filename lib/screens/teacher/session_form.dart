@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user.dart';
 import '../../providers/teacher_provider.dart';
-import '../../providers/auth_provider.dart'; // ✅ استيراد authProvider
+import '../../providers/auth_provider.dart';
 import '../../widgets/session_part_form.dart';
 import '../../core/strings.dart';
-import '../../services/quran_service.dart';
 
 class SessionForm extends ConsumerStatefulWidget {
   final User student;
@@ -22,8 +21,7 @@ class _SessionFormState extends ConsumerState<SessionForm> {
   bool _earlyAttendance = false;
   bool _onTimeDeparture = false;
   bool _earlyRecitation = false;
-  final _cumulativeController = TextEditingController();
-  int? _sessionLocalId;
+  int? _sessionLocalId;   // int?
 
   @override
   void initState() {
@@ -35,7 +33,6 @@ class _SessionFormState extends ConsumerState<SessionForm> {
   void dispose() {
     for (var c in _newParts) c.dispose();
     for (var c in _reviewParts) c.dispose();
-    _cumulativeController.dispose();
     super.dispose();
   }
 
@@ -52,13 +49,13 @@ class _SessionFormState extends ConsumerState<SessionForm> {
       earlyRecitation: _earlyRecitation,
       cumulativeDone: _cumulativeDone,
     );
-    _sessionLocalId = session.id;
+    _sessionLocalId = session.id;   // id هو autoIncrement (int)
 
     for (var c in _newParts) {
       final data = c.getData();
       if (data != null) {
         await ref.read(teacherProvider).addSessionPart(
-          sessionLocalId: session.id,
+          sessionLocalId: session.id,   // int
           type: data.isExtra ? 'extra_new' : 'new',
           suraStart: data.suraStart,
           ayaStart: data.ayaStart,
@@ -75,7 +72,7 @@ class _SessionFormState extends ConsumerState<SessionForm> {
       final data = c.getData();
       if (data != null) {
         await ref.read(teacherProvider).addSessionPart(
-          sessionLocalId: session.id,
+          sessionLocalId: session.id,   // int
           type: data.isExtra ? 'extra_review' : 'review',
           suraStart: data.suraStart,
           ayaStart: data.ayaStart,
@@ -88,12 +85,14 @@ class _SessionFormState extends ConsumerState<SessionForm> {
       }
     }
 
-    await ref.read(teacherProvider).calculateSessionPoints(session.id);
+    await ref.read(teacherProvider).calculateSessionPoints(session.id); // int
     if (mounted) Navigator.pop(context);
   }
 
+  // build كما هي
   @override
   Widget build(BuildContext context) {
+    // ... نفس الكود السابق بدون تغيير
     return Scaffold(
       appBar: AppBar(title: Text('جلسة ${widget.student.fullName}')),
       body: SingleChildScrollView(
