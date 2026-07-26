@@ -10,129 +10,107 @@ import 'quran_database_service.dart';
 class SessionService {
   final _uuid = const Uuid();
 
-  Future<Session> createSession({
+  Future<Session> submitFullSession({
     required String studentSupabaseId,
     required String groupSupabaseId,
     required String teacherSupabaseId,
     required DateTime sessionDate,
+    required List<Map<String, dynamic>> partsData,
     bool earlyAttendance = false,
     bool onTimeDeparture = false,
     bool earlyRecitation = false,
     bool cumulativeDone = false,
   }) async {
     final isar = await IsarService.isar;
-    final session = Session()
-      // id سيتولد تلقائيًا (autoIncrement)
-      ..supabaseId = _uuid.v4()
-      ..studentSupabaseId = studentSupabaseId
-      ..groupSupabaseId = groupSupabaseId
-      ..teacherSupabaseId = teacherSupabaseId
-      ..sessionDate = sessionDate
-      ..earlyAttendance = earlyAttendance
-      ..onTimeDeparture = onTimeDeparture
-      ..earlyRecitation = earlyRecitation
-      ..cumulativeDone = cumulativeDone
-      ..totalPoints = 0.0
-      ..isSynced = false
-      ..createdAt = DateTime.now();
-
-    await isar.writeTxn(() async {
-      await isar.sessions.put(session);
-    });
-    return session;
-  }
-
-  Future<void> addSessionPart({
-    required int sessionLocalId,     // int
-    required String type,
-    required int suraStart,
-    required int ayaStart,
-    required int suraEnd,
-    required int ayaEnd,
-    bool isExtra = false,
-    String? evaluation,
-    String? notes,
-  }) async {
     final db = QuranDatabaseService();
-    final pages = await db.calculatePages(suraStart, ayaStart, suraEnd, ayaEnd);
-    final isar = await IsarService.isar;
-    final part = SessionPart()
-      ..sessionLocalId = sessionLocalId
-      ..supabaseId = _uuid.v4()
-      ..type = type
-      ..suraStart = suraStart
-      ..ayaStart = ayaStart
-      ..suraEnd = suraEnd
-      ..ayaEnd = ayaEnd
-      ..pagesCount = pages
-      ..isExtra = isExtra
-      ..evaluation = evaluation
-      ..notes = notes
-      ..isSynced = false;
+    Session? session;
 
     await isar.writeTxn(() async {
-      await isar.sessionParts.put(part);
-    });
-  }
+      session = Session()
+        ..supabaseId = _uuid.v4()
+        ..studentSupabaseId = studentSupabaseId
+        ..groupSupabaseId = groupSupabaseId
+        ..teacherSupabaseId = teacherSupabaseId
+        ..sessionDate = sessionDate
+        ..earlyAttendance = earlyAttendance
+        ..onTimeDeparture = onTimeDeparture
+        ..earlyRecitation = earlyRecitation
+        ..cumulativeDone = cumulativeDone
+        ..totalPoints = 0.0
+        ..isSynced = false
+        ..createdAt = DateTime.now();
+      await isar.sessions.put(session!);
 
-  Future<void> calculateAndUpdateSessionPoints(int sessionLocalId) async { // int
-    final isar = await IsarService.isar;
-    final session = await isar.sessions.get(sessionLocalId);
-    if (session == null) return;
+      double newBasePages = 0, newExtraPages = 0;
+      double reviewBasePages = 0, reviewExtraPages = 0;
 
-    final parts = await isar.sessionParts
-        .where()
-        .sessionLocalIdEqualTo(sessionLocalId)
-        .findAll();
+      for (var data in partsData) {
+        final pages = await db.calculatePages(
+          data['suraStart'], data['ayaStart'],
+          data['suraEnd'], data['ayaEnd'],
+        );
 
-    final profile = await isar.studentProfiles
-        .where()
-        .userSupabaseIdEqualTo(session.studentSupabaseId)
-        .findFirst();
-    if (profile == null) throw DatabaseException('ملف الطالب غير موجود');
+        final part = SessionPart()
+          ..sessionLocalId = session!.id
+          ..supabaseId = _uuid.v4()
+          ..type = data['type']
+          ..suraStart = data['suraStart']
+          ..ayaStart = data['ayaStart']
+          ..suraEnd = data['suraEnd']
+          ..ayaEnd = data['ayaEnd']
+          ..pagesCount = pages
+          ..isExtra = data['isExtra'] ?? false
+          ..evaluation = data['evaluation']
+          ..notes = data['notes']
+          ..isSynced = false;
 
-    double total = 0.0;
-    if (session.earlyAttendance) total += 2;
-    if (session.onTimeDeparture) total += 2;
-    if (session.earlyRecitation) total += 2;
+        await isar.sessionParts.put(part);
 
-    double newBasePages = 0, newExtraPages = 0;
-    double reviewBasePages = 0, reviewExtraPages = 0;
-
-    for (var part in parts) {
-      if (part.type == 'new') {
-        if (part.isExtra) {
-          newExtraPages += part.pagesCount;
+        if (data['type'] == 'new' || data['type'] == 'extra_new') {
+          if (data['isExtra']) {
+            newExtraPages += pages;
+          } else {
+            newBasePages += pages;
+          }
         } else {
-          newBasePages += part.pagesCount;
-        }
-      } else if (part.type == 'review') {
-        if (part.isExtra) {
-          reviewExtraPages += part.pagesCount;
-        } else {
-          reviewBasePages += part.pagesCount;
+          if (data['isExtra']) {
+            reviewExtraPages += pages;
+          } else {
+            reviewBasePages += pages;
+          }
         }
       }
-    }
 
-    final newTarget = profile.newPagesTarget.toDouble();
-    if (newTarget > 0) {
-      total += (newBasePages / newTarget) * 4;
-      total += (newExtraPages / newTarget) * 6;
-    }
+      final profile = await isar.studentProfiles
+          .where()
+          .userSupabaseIdEqualTo(studentSupabaseId)
+          .findFirst();
+      if (profile == null) throw DatabaseException('ملف الطالب غير موجود');
 
-    if (session.cumulativeDone) {
-      final reviewTarget = profile.reviewPagesTarget.toDouble();
-      if (reviewTarget > 0) {
-        total += (reviewBasePages / reviewTarget) * 6;
-        total += (reviewExtraPages / reviewTarget) * 8;
+      double total = 0.0;
+      if (earlyAttendance) total += 2;
+      if (onTimeDeparture) total += 2;
+      if (earlyRecitation) total += 2;
+
+      final newTarget = profile.newPagesTarget.toDouble();
+      if (newTarget > 0) {
+        total += (newBasePages / newTarget) * 4;
+        total += (newExtraPages / newTarget) * 6;
       }
-    }
 
-    await isar.writeTxn(() async {
-      session.totalPoints = total;
-      await isar.sessions.put(session);
+      if (cumulativeDone) {
+        final reviewTarget = profile.reviewPagesTarget.toDouble();
+        if (reviewTarget > 0) {
+          total += (reviewBasePages / reviewTarget) * 6;
+          total += (reviewExtraPages / reviewTarget) * 8;
+        }
+      }
+
+      session!.totalPoints = total;
+      await isar.sessions.put(session!);
     });
+
+    return session!;
   }
 
   Future<List<Session>> getUnsyncedSessions() async {

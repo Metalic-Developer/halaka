@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class AppException implements Exception {
   final String message;
   final String? details;
   AppException({required this.message, this.details});
-  
+
   @override
   String toString() => 'AppException: $message${details != null ? ' ($details)' : ''}';
 }
@@ -25,27 +26,41 @@ class SyncException extends AppException {
   SyncException(String details) : super(message: 'خطأ في المزامنة', details: details);
 }
 
-// معالج مركزي لعرض الخطأ للمستخدم
+// معالج مركزي لعرض الخطأ للمستخدم مع Debounce
 class ErrorHandler {
+  static final Map<String, DateTime> _lastShown = {};
+
   static void showError(BuildContext context, AppException error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(error.message),
-        backgroundColor: Colors.red.shade700,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(label: 'حسنًا', onPressed: () {}),
-      ),
-    );
+    final key = error.message;
+    final now = DateTime.now();
+    if (_lastShown.containsKey(key) &&
+        now.difference(_lastShown[key]!) < const Duration(seconds: 3)) {
+      return; // تجاهل التكرار السريع
+    }
+    _lastShown[key] = now;
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(label: 'حسنًا', onPressed: () {}),
+        ),
+      );
+    }
   }
-  
+
   static void showSuccess(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: Colors.green.shade700,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }

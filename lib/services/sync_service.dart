@@ -26,6 +26,13 @@ class SyncService {
   Future<void> pullAllData() async {
     try {
       final isar = await IsarService.isar;
+
+      // ✅ منع المسح إذا كانت هناك جلسات غير مرفوعة
+      final unsynced = await _sessionService.getUnsyncedSessions();
+      if (unsynced.isNotEmpty) {
+        throw SyncException('توجد جلسات غير مزامنة. ارفعها أولاً.');
+      }
+
       final userRows = await _client.from('users').select();
       final users = (userRows as List).map((r) => User()
         ..supabaseId = r['id'] as String

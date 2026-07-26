@@ -5,6 +5,10 @@ import '../../providers/student_provider.dart';
 import '../../models/student_profile.dart';
 import 'leaderboard.dart';
 
+final studentProfileProvider = FutureProvider.family<StudentProfile?, String>((ref, userId) {
+  return ref.read(studentProvider).getMyProfile(userId);
+});
+
 class StudentDashboard extends ConsumerWidget {
   const StudentDashboard({super.key});
 
@@ -13,7 +17,7 @@ class StudentDashboard extends ConsumerWidget {
     final user = ref.watch(authStateProvider).value;
     if (user == null) return const Center(child: CircularProgressIndicator());
 
-    final profileAsync = ref.watch(FutureProvider((ref) => ref.read(studentProvider).getMyProfile(user.id)));
+    final profileAsync = ref.watch(studentProfileProvider(user.id));
 
     return Scaffold(
       appBar: AppBar(title: const Text('حلقة القرآن')),
@@ -32,8 +36,8 @@ class StudentDashboard extends ConsumerWidget {
             ),
           ],
         ),
-        loading: () => const CircularProgressIndicator(),
-        error: (err, _) => Text('خطأ: $err'),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('خطأ: $err')),
       ),
     );
   }

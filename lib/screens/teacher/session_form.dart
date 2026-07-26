@@ -5,6 +5,12 @@ import '../../providers/teacher_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/session_part_form.dart';
 import '../../core/strings.dart';
+import '../../services/quran_database_service.dart';
+
+final surahsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final db = QuranDatabaseService();
+  return db.getSurahs();
+});
 
 class SessionForm extends ConsumerStatefulWidget {
   final User student;
@@ -21,7 +27,6 @@ class _SessionFormState extends ConsumerState<SessionForm> {
   bool _earlyAttendance = false;
   bool _onTimeDeparture = false;
   bool _earlyRecitation = false;
-  int? _sessionLocalId;   // int?
 
   @override
   void initState() {
@@ -39,97 +44,153 @@ class _SessionFormState extends ConsumerState<SessionForm> {
   Future<void> _submit() async {
     final teacher = ref.read(authProvider).currentSession?.user;
     if (teacher == null) return;
-    final session = await ref.read(teacherProvider).createSession(
+
+    final partsData = <Map<String, dynamic>>[];
+    for (var c in _newParts) {
+      final data = c.getData();
+      if (data != null) {
+        partsData.add({
+          'type': data.isExtra ? 'extra_new' : 'new',
+          'suraStart': data.suraStart,
+          'ayaStart': data.ayaStart,
+          'suraEnd': data.suraEnd,
+          'ayaEnd': data.ayaEnd,
+          'isExtra': data.isExtra,
+          'evaluation': data.evaluation,
+          'notes': data.notes,
+        });
+      }
+    }
+    for (var c in _reviewParts) {
+      final data = c.getData();
+      if (data != null) {
+        partsData.add({
+          'type': data.isExtra ? 'extra_review' : 'review',
+          'suraStart': data.suraStart,
+          'ayaStart': data.ayaStart,
+          'suraEnd': data.suraEnd,
+          'ayaEnd': data.ayaEnd,
+          'isExtra': data.isExtra,
+          'evaluation': data.evaluation,
+          'notes': data.notes,
+        });
+      }
+    }
+
+    if (partsData.isEmpty) return;
+
+    await ref.read(teacherProvider).submitFullSession(
       studentSupabaseId: widget.student.supabaseId,
       groupSupabaseId: widget.student.groupSupabaseId ?? '',
       teacherSupabaseId: teacher.id,
       sessionDate: DateTime.now(),
+      partsData: partsData,
       earlyAttendance: _earlyAttendance,
       onTimeDeparture: _onTimeDeparture,
       earlyRecitation: _earlyRecitation,
       cumulativeDone: _cumulativeDone,
     );
-    _sessionLocalId = session.id;   // id هو autoIncrement (int)
 
-    for (var c in _newParts) {
-      final data = c.getData();
-      if (data != null) {
-        await ref.read(teacherProvider).addSessionPart(
-          sessionLocalId: session.id,   // int
-          type: data.isExtra ? 'extra_new' : 'new',
-          suraStart: data.suraStart,
-          ayaStart: data.ayaStart,
-          suraEnd: data.suraEnd,
-          ayaEnd: data.ayaEnd,
-          isExtra: data.isExtra,
-          evaluation: data.evaluation,
-          notes: data.notes,
-        );
-      }
-    }
-
-    for (var c in _reviewParts) {
-      final data = c.getData();
-      if (data != null) {
-        await ref.read(teacherProvider).addSessionPart(
-          sessionLocalId: session.id,   // int
-          type: data.isExtra ? 'extra_review' : 'review',
-          suraStart: data.suraStart,
-          ayaStart: data.ayaStart,
-          suraEnd: data.suraEnd,
-          ayaEnd: data.ayaEnd,
-          isExtra: data.isExtra,
-          evaluation: data.evaluation,
-          notes: data.notes,
-        );
-      }
-    }
-
-    await ref.read(teacherProvider).calculateSessionPoints(session.id); // int
     if (mounted) Navigator.pop(context);
   }
 
-  // build كما هي
   @override
   Widget build(BuildContext context) {
-    // ... نفس الكود السابق بدون تغيير
+    final surahsAsync = ref.watch(surahsProvider);
+
     return Scaffold(
       appBar: AppBar(title: Text('جلسة ${widget.student.fullName}')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CheckboxListTile(
-              title: const Text(AppStrings.doneCumulative),
-              value: _cumulativeDone,
-              onChanged: (v) => setState(() => _cumulativeDone = v ?? false),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CheckboxListTile(
+                  title: const Text(AppStrings.doneCumulative),
+                  value: _cumulativeDone,
+                  onChanged: (v) => setState(() => _cumulativeDone = v ?? false),
+                ),
+                Text(AppStrings.newMemorization,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                surahsAsync.when(
+                  data: (surahs) => Column(
+                    children: _newParts.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final c = entry.value;
+                      return SessionPartWidget(
+                        controller: c,
+                        isExtra: false,
+                        surahs: surahs,
+                        onDelete: _newParts.length > 1
+                            ? () => setState(() {
+                                  c.dispose();
+                                  _newParts.removeAt(index);
+                                })
+                            : null,
+                      );
+                    }).toList(),
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, _) => Text('خطأ في تحميل السور: $e'),
+                ),
+                TextButton.icon(
+                  onPressed: () => setState(() => _newParts.add(SessionPartWidgetController())),
+                  icon: const Icon(Icons.add),
+                  label: const Text('إضافة تسميع منفصل'),
+                ),
+                const Divider(),
+                Text(AppStrings.review,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                surahsAsync.when(
+                  data: (surahs) => Column(
+                    children: _reviewParts.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final c = entry.value;
+                      return SessionPartWidget(
+                        controller: c,
+                        isExtra: false,
+                        surahs: surahs,
+                        onDelete: () => setState(() {
+                          c.dispose();
+                          _reviewParts.removeAt(index);
+                        }),
+                      );
+                    }).toList(),
+                  ),
+                  loading: () => const SizedBox(),
+                  error: (e, _) => const SizedBox(),
+                ),
+                TextButton.icon(
+                  onPressed: () => setState(() => _reviewParts.add(SessionPartWidgetController())),
+                  icon: const Icon(Icons.add),
+                  label: const Text('إضافة مراجعة منفصلة'),
+                ),
+                const Divider(),
+                CheckboxListTile(
+                    title: const Text(AppStrings.earlyAttendance),
+                    value: _earlyAttendance,
+                    onChanged: (v) => setState(() => _earlyAttendance = v ?? false)),
+                CheckboxListTile(
+                    title: const Text(AppStrings.onTimeDeparture),
+                    value: _onTimeDeparture,
+                    onChanged: (v) => setState(() => _onTimeDeparture = v ?? false)),
+                CheckboxListTile(
+                    title: const Text(AppStrings.earlyRecitation),
+                    value: _earlyRecitation,
+                    onChanged: (v) => setState(() => _earlyRecitation = v ?? false)),
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _cumulativeDone ? _submit : null,
+                    child: const Text('حفظ الجلسة'),
+                  ),
+                ),
+              ],
             ),
-            Text(AppStrings.newMemorization, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ..._newParts.map((c) => SessionPartWidget(controller: c, isExtra: false)),
-            TextButton.icon(
-              onPressed: () => setState(() => _newParts.add(SessionPartWidgetController())),
-              icon: const Icon(Icons.add),
-              label: const Text('إضافة تسميع منفصل'),
-            ),
-            const Divider(),
-            Text(AppStrings.review, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ..._reviewParts.map((c) => SessionPartWidget(controller: c, isExtra: false)),
-            TextButton.icon(
-              onPressed: () => setState(() => _reviewParts.add(SessionPartWidgetController())),
-              icon: const Icon(Icons.add),
-              label: const Text('إضافة مراجعة منفصلة'),
-            ),
-            const Divider(),
-            CheckboxListTile(title: const Text(AppStrings.earlyAttendance), value: _earlyAttendance, onChanged: (v) => setState(() => _earlyAttendance = v ?? false)),
-            CheckboxListTile(title: const Text(AppStrings.onTimeDeparture), value: _onTimeDeparture, onChanged: (v) => setState(() => _onTimeDeparture = v ?? false)),
-            CheckboxListTile(title: const Text(AppStrings.earlyRecitation), value: _earlyRecitation, onChanged: (v) => setState(() => _earlyRecitation = v ?? false)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _cumulativeDone ? _submit : null,
-              child: const Text('حفظ الجلسة'),
-            ),
-          ],
+          ),
         ),
       ),
     );

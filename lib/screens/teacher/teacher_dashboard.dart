@@ -1,54 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/strings.dart';
 import '../../providers/auth_provider.dart';
-import 'day_session_list.dart';
-import 'package:intl/intl.dart';
 
 class TeacherDashboard extends ConsumerWidget {
   const TeacherDashboard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authProvider);
-    final today = DateTime.now();
-    final weekStart = today.subtract(Duration(days: today.weekday - DateTime.saturday));
+    // ✅ حساب weekStart في الدالة نفسها (لمرة واحدة) عبر cached variable
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday - 6));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.appName),
-        actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: () => auth.signOut()),
-        ],
-      ),
-      body: Padding(
+      appBar: AppBar(title: const Text('لوحة المشرف')),
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // زر حلقة اليوم
-            SizedBox(
-              width: double.infinity,
-              height: 80,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const DaySessionList()),
-                  );
-                },
-                icon: const Icon(Icons.menu_book, size: 30),
-                label: Text(
-                  '${AppStrings.todaySession} - ${DateFormat.yMMMMd('ar').format(today)}',
-                  style: const TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // جدول الأسبوع (يمكن أن يكون جداول اختيارية)
-            Text('الأسبوع: ${DateFormat.yMMMd('ar').format(weekStart)}'),
-            // ... عرض سريع لأيام الأسبوع
-          ],
-        ),
+        children: [
+          Text('أهلاً بك في لوحة تحكم المشرف'),
+          // يمكن إضافة بطاقات أو أزرار للانتقال إلى إدارة الحلقات
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/day-session'); // مثال
+            },
+            child: const Text('حلقة اليوم'),
+          ),
+        ],
       ),
     );
   }

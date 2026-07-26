@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/supabase_config.dart'; // ✅ المسار الجديد
+import '../services/supabase_config.dart';
 import '../core/strings.dart';
+
+final teacherRegistrationEnabledProvider = FutureProvider<bool>((ref) async {
+  try {
+    final res = await SupabaseConfig.client
+        .from('settings')
+        .select('teacher_registration')
+        .single();
+    return res['teacher_registration'] == true;
+  } catch (_) {
+    return false;
+  }
+});
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +30,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String _role = 'student';
   bool _loading = false;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _register() async {
     setState(() => _loading = true);
     try {
@@ -27,24 +47,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         data: {'full_name': _nameController.text.trim()},
       );
       if (res.user != null) {
-        await SupabaseConfig.client.from('users').insert({
-          'id': res.user!.id,
-          'email': _emailController.text.trim(),
-          'full_name': _nameController.text.trim(),
-          'role': _role,
-        });
-        if (mounted) {
+        try {
+          await SupabaseConfig.client.from('users').insert({
+            'id': res.user!.id,
+            'email': _emailController.text.trim(),
+            'full_name': _nameController.text.trim(),
+            'role': _role,
+          });
+          if (!mounted) return;
           Navigator.pushReplacementNamed(context, '/login');
+        } catch (_) {
+          await SupabaseConfig.client.auth.signOut();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فشل إكمال التسجيل. حاول مرة أخرى.')),
+          );
         }
       }
     } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ: $e')),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -52,45 +77,43 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final teacherEnabled = ref.watch(teacherRegistrationEnabledProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.register)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'الاسم الكامل'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'كلمة المرور'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _role,
-              decoration: const InputDecoration(labelText: 'الدور'),
-              items: const [
-                DropdownMenuItem(value: 'student', child: Text('طالب')),
-                DropdownMenuItem(value: 'guardian', child: Text('ولي أمر')),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                TextFormField(controller: _nameController, decoration: ...),
+                TextFormField(controller: _emailController, ...),
+                TextFormField(controller: _passwordController, ...),
+                const SizedBox(height: 12),
+                teacherEnabled.when(
+                  data: (enabled) => DropdownButtonFormField<String>(
+                    value: _role,
+                    decoration: const InputDecoration(labelText: 'الدور'),
+                    items: [
+                      const DropdownMenuItem(value: 'student', child: Text('طالب')),
+                      const DropdownMenuItem(value: 'guardian', child: Text('ولي أمر')),
+                      if (enabled) const DropdownMenuItem(value: 'teacher', child: Text('معلم')),
+                    ],
+                    onChanged: (v) => _role = v!,
+                  ),
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => const SizedBox(),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _loading ? null : _register,
+                  child: _loading ? const CircularProgressIndicator() : const Text(AppStrings.register),
+                ),
               ],
-              onChanged: (v) => _role = v!,
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loading ? null : _register,
-              child: _loading
-                  ? const CircularProgressIndicator(strokeWidth: 2)
-                  : const Text(AppStrings.register),
-            ),
-          ],
+          ),
         ),
       ),
     );

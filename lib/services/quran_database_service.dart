@@ -22,18 +22,25 @@ class QuranDatabaseService {
 
     final file = File(dbPath);
     if (!await file.exists()) {
-      final data = await rootBundle.load('assets/quran.db');
-      final bytes = data.buffer.asUint8List();
-      await file.writeAsBytes(bytes);
+      await _copyDatabaseInBackground(dbPath);
     }
 
     return await openDatabase(dbPath, readOnly: true);
   }
 
+  Future<void> _copyDatabaseInBackground(String dbPath) async {
+    final data = await rootBundle.load('assets/quran.db');
+    final bytes = data.buffer.asUint8List();
+    // استخدام Isolate.run لعزل عملية الكتابة (Flutter 3.7+)
+    await Isolate.run(() async {
+      await File(dbPath).writeAsBytes(bytes);
+    });
+  }
+
   Future<List<Map<String, dynamic>>> getSurahs() async {
     final db = await database;
     final result = await db.rawQuery(
-      'SELECT DISTINCT sora, sora_name_ar FROM quran_index ORDER BY sora'
+      'SELECT DISTINCT sora, sora_name_ar FROM quran_index ORDER BY sora',
     );
     return result;
   }

@@ -25,6 +25,7 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
   OverlayEntry? _overlayEntry;
   final LayerLink _layerLink = LayerLink();
   List<T> filtered = [];
+  bool _overlayVisible = false;
 
   @override
   void initState() {
@@ -33,42 +34,63 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
   }
 
   void _showOverlay() {
+    if (_overlayVisible) return;
     final overlay = Overlay.of(context);
     _overlayEntry = OverlayEntry(
-      builder: (ctx) => Positioned(
-        width: MediaQuery.of(context).size.width - 32,
-        child: CompositedTransformFollower(
-          link: _layerLink,
-          offset: const Offset(0, 48),
-          child: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(8),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: filtered.length,
-                itemBuilder: (ctx, i) => ListTile(
-                  title: Text(widget.labelBuilder(filtered[i])),
-                  onTap: () {
-                    widget.onChanged?.call(filtered[i]);
-                    _searchCtrl.text = widget.labelBuilder(filtered[i]);
-                    _removeOverlay();
-                  },
+      builder: (ctx) => GestureDetector(
+        onTap: () => _removeOverlay(), // ✅ إغلاق عند النقر خارج القائمة
+        child: Stack(
+          children: [
+            Positioned.fill(child: Container(color: Colors.transparent)),
+            Positioned(
+              width: MediaQuery.of(context).size.width - 32,
+              child: CompositedTransformFollower(
+                link: _layerLink,
+                offset: const Offset(0, 48),
+                child: Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(8),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: filtered.length,
+                      itemBuilder: (ctx, i) => ListTile(
+                        title: Text(widget.labelBuilder(filtered[i])),
+                        onTap: () {
+                          widget.onChanged?.call(filtered[i]);
+                          _searchCtrl.text = widget.labelBuilder(filtered[i]);
+                          _removeOverlay();
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
     overlay.insert(_overlayEntry!);
+    _overlayVisible = true;
   }
 
   void _removeOverlay() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    if (_overlayEntry != null) {
+      _overlayEntry!.remove();
+      _overlayEntry!.dispose();
+      _overlayEntry = null;
+      _overlayVisible = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   @override

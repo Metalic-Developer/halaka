@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:   # ✅ دعم اللغة العربية
+    sdk: flutter
   csv: ^8.0.0
 
   # UI

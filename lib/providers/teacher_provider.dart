@@ -33,54 +33,28 @@ class TeacherController {
         .findAll();
   }
 
-  Future<Session> createSession({
+  Future<Session> submitFullSession({
     required String studentSupabaseId,
     required String groupSupabaseId,
     required String teacherSupabaseId,
     required DateTime sessionDate,
+    required List<Map<String, dynamic>> partsData,
     bool earlyAttendance = false,
     bool onTimeDeparture = false,
     bool earlyRecitation = false,
     bool cumulativeDone = false,
-  }) async {
-    return await _sessionService.createSession(
+  }) {
+    return _sessionService.submitFullSession(
       studentSupabaseId: studentSupabaseId,
       groupSupabaseId: groupSupabaseId,
       teacherSupabaseId: teacherSupabaseId,
       sessionDate: sessionDate,
+      partsData: partsData,
       earlyAttendance: earlyAttendance,
       onTimeDeparture: onTimeDeparture,
       earlyRecitation: earlyRecitation,
       cumulativeDone: cumulativeDone,
     );
-  }
-
-  Future<void> addSessionPart({
-    required int sessionLocalId,   // int
-    required String type,
-    required int suraStart,
-    required int ayaStart,
-    required int suraEnd,
-    required int ayaEnd,
-    bool isExtra = false,
-    String? evaluation,
-    String? notes,
-  }) async {
-    await _sessionService.addSessionPart(
-      sessionLocalId: sessionLocalId,
-      type: type,
-      suraStart: suraStart,
-      ayaStart: ayaStart,
-      suraEnd: suraEnd,
-      ayaEnd: ayaEnd,
-      isExtra: isExtra,
-      evaluation: evaluation,
-      notes: notes,
-    );
-  }
-
-  Future<void> calculateSessionPoints(int sessionLocalId) async {
-    await _sessionService.calculateAndUpdateSessionPoints(sessionLocalId);
   }
 
   Future<StudentProfile?> getStudentProfile(String userSupabaseId) async {

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/quran_database_service.dart';
 import 'searchable_dropdown.dart';
 
-// ---------------------- Controller & Data ----------------------
 class SessionPartWidgetController {
   final TextEditingController surahStartCtrl = TextEditingController();
   final TextEditingController ayaStartCtrl = TextEditingController();
@@ -53,51 +51,55 @@ class SessionPartData {
   });
 }
 
-// ---------------------- Widget ----------------------
 class SessionPartWidget extends StatefulWidget {
   final SessionPartWidgetController controller;
   final bool isExtra;
+  final List<Map<String, dynamic>> surahs;
+  final VoidCallback? onDelete;
 
-  const SessionPartWidget({super.key, required this.controller, required this.isExtra});
+  const SessionPartWidget({
+    super.key,
+    required this.controller,
+    required this.isExtra,
+    required this.surahs,
+    this.onDelete,
+  });
 
   @override
   State<SessionPartWidget> createState() => _SessionPartWidgetState();
 }
 
 class _SessionPartWidgetState extends State<SessionPartWidget> {
-  final QuranDatabaseService _quranDB = QuranDatabaseService();
-  List<Map<String, dynamic>> surahs = [];
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSurahs();
-  }
-
-  Future<void> _loadSurahs() async {
-    surahs = await _quranDB.getSurahs();
-    setState(() => _loaded = true);
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (!_loaded) return const LinearProgressIndicator();
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            Text(widget.isExtra ? 'تسميع منفصل' : 'أساسي'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.isExtra ? 'تسميع منفصل' : 'أساسي',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                if (widget.onDelete != null)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: widget.onDelete,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: SearchableDropdown<Map<String, dynamic>>(
-                    items: surahs,
+                    items: widget.surahs,
                     labelBuilder: (s) => '${s['sora_name_ar']} (${s['sora']})',
                     hint: 'من سورة',
-                    onChanged: (val) => widget.controller.surahStartCtrl.text = val?['sora'].toString() ?? '',
+                    onChanged: (val) =>
+                        widget.controller.surahStartCtrl.text = val?['sora'].toString() ?? '',
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -115,10 +117,11 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
               children: [
                 Expanded(
                   child: SearchableDropdown<Map<String, dynamic>>(
-                    items: surahs,
+                    items: widget.surahs,
                     labelBuilder: (s) => '${s['sora_name_ar']} (${s['sora']})',
                     hint: 'إلى سورة',
-                    onChanged: (val) => widget.controller.surahEndCtrl.text = val?['sora'].toString() ?? '',
+                    onChanged: (val) =>
+                        widget.controller.surahEndCtrl.text = val?['sora'].toString() ?? '',
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -132,18 +135,26 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
               ],
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: widget.controller.evaluation,
-              decoration: const InputDecoration(labelText: 'التقييم'),
-              items: const [
-                DropdownMenuItem(value: 'ممتاز', child: Text('ممتاز')),
-                DropdownMenuItem(value: 'جيد جداً', child: Text('جيد جداً')),
-                DropdownMenuItem(value: 'جيد', child: Text('جيد')),
-                DropdownMenuItem(value: 'مقبول', child: Text('مقبول')),
-                DropdownMenuItem(value: 'ضعيف', child: Text('ضعيف')),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'ممتاز', label: Text('ممتاز')),
+                ButtonSegment(value: 'جيد جداً', label: Text('جيد جداً')),
+                ButtonSegment(value: 'جيد', label: Text('جيد')),
+                ButtonSegment(value: 'مقبول', label: Text('مقبول')),
+                ButtonSegment(value: 'ضعيف', label: Text('ضعيف')),
               ],
-              onChanged: (v) => widget.controller.evaluation = v,
+              selected: widget.controller.evaluation != null
+                  ? {widget.controller.evaluation!}
+                  : <String>{},
+              emptySelectionAllowed: true,
+              onSelectionChanged: (newSelection) {
+                setState(() {
+                  widget.controller.evaluation = newSelection.firstOrNull;
+                });
+              },
+              showSelectedIcon: false,
             ),
+            const SizedBox(height: 8),
             TextField(
               controller: widget.controller.notesCtrl,
               decoration: const InputDecoration(labelText: 'ملاحظات'),
