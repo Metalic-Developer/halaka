@@ -72,6 +72,7 @@ const SessionPartSchema = CollectionSchema(
       id: 11,
       name: r'type',
       type: IsarType.string,
+      enumMap: _SessionParttypeEnumValueMap,
     )
   },
   estimateSize: _sessionPartEstimateSize,
@@ -152,7 +153,7 @@ int _sessionPartEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
-  bytesCount += 3 + object.type.length * 3;
+  bytesCount += 3 + object.type.name.length * 3;
   return bytesCount;
 }
 
@@ -173,7 +174,7 @@ void _sessionPartSerialize(
   writer.writeString(offsets[8], object.supabaseId);
   writer.writeLong(offsets[9], object.suraEnd);
   writer.writeLong(offsets[10], object.suraStart);
-  writer.writeString(offsets[11], object.type);
+  writer.writeString(offsets[11], object.type.name);
 }
 
 SessionPart _sessionPartDeserialize(
@@ -195,7 +196,9 @@ SessionPart _sessionPartDeserialize(
   object.supabaseId = reader.readStringOrNull(offsets[8]);
   object.suraEnd = reader.readLong(offsets[9]);
   object.suraStart = reader.readLong(offsets[10]);
-  object.type = reader.readString(offsets[11]);
+  object.type =
+      _SessionParttypeValueEnumMap[reader.readStringOrNull(offsets[11])] ??
+          SessionType.memorization;
   return object;
 }
 
@@ -229,11 +232,25 @@ P _sessionPartDeserializeProp<P>(
     case 10:
       return (reader.readLong(offset)) as P;
     case 11:
-      return (reader.readString(offset)) as P;
+      return (_SessionParttypeValueEnumMap[reader.readStringOrNull(offset)] ??
+          SessionType.memorization) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _SessionParttypeEnumValueMap = {
+  r'memorization': r'memorization',
+  r'cumulative': r'cumulative',
+  r'review': r'review',
+  r'unknown': r'unknown',
+};
+const _SessionParttypeValueEnumMap = {
+  r'memorization': SessionType.memorization,
+  r'cumulative': SessionType.cumulative,
+  r'review': SessionType.review,
+  r'unknown': SessionType.unknown,
+};
 
 Id _sessionPartGetId(SessionPart object) {
   return object.id;
@@ -1476,7 +1493,7 @@ extension SessionPartQueryFilter
   }
 
   QueryBuilder<SessionPart, SessionPart, QAfterFilterCondition> typeEqualTo(
-    String value, {
+    SessionType value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1489,7 +1506,7 @@ extension SessionPartQueryFilter
   }
 
   QueryBuilder<SessionPart, SessionPart, QAfterFilterCondition> typeGreaterThan(
-    String value, {
+    SessionType value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1504,7 +1521,7 @@ extension SessionPartQueryFilter
   }
 
   QueryBuilder<SessionPart, SessionPart, QAfterFilterCondition> typeLessThan(
-    String value, {
+    SessionType value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1519,8 +1536,8 @@ extension SessionPartQueryFilter
   }
 
   QueryBuilder<SessionPart, SessionPart, QAfterFilterCondition> typeBetween(
-    String lower,
-    String upper, {
+    SessionType lower,
+    SessionType upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -2074,7 +2091,7 @@ extension SessionPartQueryProperty
     });
   }
 
-  QueryBuilder<SessionPart, String, QQueryOperations> typeProperty() {
+  QueryBuilder<SessionPart, SessionType, QQueryOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'type');
     });

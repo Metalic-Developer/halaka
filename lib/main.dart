@@ -4,13 +4,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'services/supabase_config.dart';
 import 'core/theme.dart';
 import 'core/router.dart';
-import 'services/isar_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseConfig.init();
-  await IsarService.isar; // تهيئة Isar
-  // ❌ إزالة QuranDatabaseService من هنا – انتقل إلى SplashScreen
+  // await IsarService.isar; // علق للاختبار على الويب
   runApp(const ProviderScope(child: QuranHalaqaApp()));
 }
 
@@ -27,9 +25,7 @@ class QuranHalaqaApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ar', 'SA'),
-      ],
+      supportedLocales: const [Locale('ar', 'SA')],
       locale: const Locale('ar', 'SA'),
       initialRoute: AppRouter.splash,
       onGenerateRoute: AppRouter.generateRoute,

@@ -47,7 +47,7 @@ class SessionPart {
   @Index(unique: true, replace: true)
   String? supabaseId;
 
-  @enumerated
+  @Enumerated(EnumType.name)
   late SessionType type;
 
   late int suraStart;

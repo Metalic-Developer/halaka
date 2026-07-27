@@ -86,39 +86,39 @@ class SyncService {
       final partRows = await _client.from('session_parts').select();
 
       await isar.writeTxn(() async {
-        await isar.localUsers.clear();
-        await isar.localUsers.putAll(users);
-        await isar.mosques.clear();
-        await isar.mosques.putAll(mosques);
-        await isar.groups.clear();
-        await isar.groups.putAll(groups);
-        await isar.studentProfiles.clear();
-        await isar.studentProfiles.putAll(studentProfiles);
+        await isar.collection<LocalUser>().clear();
+        await isar.collection<LocalUser>().putAll(users);
+        await isar.collection<Mosque>().clear();
+        await isar.collection<Mosque>().putAll(mosques);
+        await isar.collection<Group>().clear();
+        await isar.collection<Group>().putAll(groups);
+        await isar.collection<StudentProfile>().clear();
+        await isar.collection<StudentProfile>().putAll(studentProfiles);
 
-        await isar.sessions.clear();
-        await isar.sessions.putAll(remoteSessions);
+        await isar.collection<Session>().clear();
+        await isar.collection<Session>().putAll(remoteSessions);
 
         final sessionMap = { for (var s in remoteSessions) s.supabaseId: s.id };
 
         final remoteParts = (partRows as List).map((r) {
-           final sId = r['session_id'];
-           return SessionPart()
-             ..sessionLocalId = sessionMap[sId] ?? -1
-             ..supabaseId = r['id']
-             ..type = SessionTypeMapper.fromDatabase(r['type'] ?? '')
-             ..suraStart = r['sura_start']
-             ..ayaStart = r['aya_start']
-             ..suraEnd = r['sura_end']
-             ..ayaEnd = r['aya_end']
-             ..pagesCount = (r['pages_count'] as num).toDouble()
-             ..isExtra = r['is_extra'] ?? false
-             ..evaluation = r['evaluation']
-             ..notes = r['notes']
-             ..isSynced = true;
+          final sId = r['session_id'];
+          return SessionPart()
+            ..sessionLocalId = sessionMap[sId] ?? -1
+            ..supabaseId = r['id']
+            ..type = SessionTypeMapper.fromDatabase(r['type'] ?? '')
+            ..suraStart = r['sura_start']
+            ..ayaStart = r['aya_start']
+            ..suraEnd = r['sura_end']
+            ..ayaEnd = r['aya_end']
+            ..pagesCount = (r['pages_count'] as num).toDouble()
+            ..isExtra = r['is_extra'] ?? false
+            ..evaluation = r['evaluation']
+            ..notes = r['notes']
+            ..isSynced = true;
         }).where((p) => p.sessionLocalId != -1).toList();
 
-        await isar.sessionParts.clear();
-        await isar.sessionParts.putAll(remoteParts);
+        await isar.collection<SessionPart>().clear();
+        await isar.collection<SessionPart>().putAll(remoteParts);
       });
     } catch (e) {
       throw SyncException('فشل سحب البيانات: $e');
@@ -132,8 +132,8 @@ class SyncService {
 
       final isar = await IsarService.isar;
       for (var session in unsynced) {
-        final parts = await isar.sessionParts
-            .where()
+        final parts = await isar.collection<SessionPart>()
+            .filter()
             .sessionLocalIdEqualTo(session.id)
             .findAll();
 
@@ -155,9 +155,9 @@ class SyncService {
         } on PostgrestException catch (e) {
           if (e.code == '23505') {
             await isar.writeTxn(() async {
-              await isar.sessions.delete(session.id);
+              await isar.collection<Session>().delete(session.id);
               for (var part in parts) {
-                await isar.sessionParts.delete(part.id);
+                await isar.collection<SessionPart>().delete(part.id);
               }
             });
             continue;
@@ -184,10 +184,10 @@ class SyncService {
 
         await isar.writeTxn(() async {
           session.isSynced = true;
-          await isar.sessions.put(session);
+          await isar.collection<Session>().put(session);
           for (var part in parts) {
             part.isSynced = true;
-            await isar.sessionParts.put(part);
+            await isar.collection<SessionPart>().put(part);
           }
         });
       }

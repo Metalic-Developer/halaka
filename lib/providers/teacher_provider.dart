@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/local_user.dart';
 import '../models/session.dart';
 import '../models/student_profile.dart';
-import '../models/user.dart';
 import '../services/isar_service.dart';
 import '../services/session_service.dart';
 import '../services/supabase_config.dart';
@@ -9,20 +9,21 @@ import '../services/supabase_config.dart';
 final sessionServiceProvider = Provider<SessionService>((ref) => SessionService());
 final teacherProvider = Provider<TeacherController>((ref) => TeacherController(ref));
 
-// حساب نسبة الحضور الأسبوعية بناءً على الأيام المنقضية
+// حساب نسبة الحضور الأسبوعية
 final studentAttendanceProvider = FutureProvider.family<double, ({String studentId, DateTime weekStart})>((ref, params) async {
   final isar = await IsarService.isar;
   final end = params.weekStart.add(const Duration(days: 6));
-  final sessionsCount = await isar.sessions.filter()
+  final sessionsCount = await isar.collection<Session>()
+      .filter()
       .studentSupabaseIdEqualTo(params.studentId)
-      .and()
+      .filter()
       .sessionDateBetween(params.weekStart, end)
       .count();
-      
+
   int elapsedDays = DateTime.now().difference(params.weekStart).inDays + 1;
   if (elapsedDays > 5) elapsedDays = 5;
   if (elapsedDays <= 0) return 100.0;
-  
+
   double attendance = (sessionsCount / elapsedDays) * 100.0;
   return attendance > 100.0 ? 100.0 : attendance;
 });
@@ -33,23 +34,25 @@ class TeacherController {
 
   SessionService get _sessionService => _ref.read(sessionServiceProvider);
 
-  Future<List<User>> getGroupStudents(String groupSupabaseId) async {
+  Future<List<LocalUser>> getGroupStudents(String groupSupabaseId) async {
     final isar = await IsarService.isar;
-    return isar.users.filter()
+    return isar.collection<LocalUser>()
+        .filter()
         .roleEqualTo('student')
-        .and()
+        .filter()
         .groupSupabaseIdEqualTo(groupSupabaseId)
-        .findAll();
+        .toList();
   }
 
   Future<List<Session>> getStudentWeeklySessions(String studentSupabaseId, DateTime weekStart) async {
     final isar = await IsarService.isar;
     final end = weekStart.add(const Duration(days: 5));
-    return isar.sessions.filter()
+    return isar.collection<Session>()
+        .filter()
         .studentSupabaseIdEqualTo(studentSupabaseId)
-        .and()
+        .filter()
         .sessionDateBetween(weekStart, end)
-        .findAll();
+        .toList();
   }
 
   Future<Session> submitFullSession({
@@ -63,6 +66,8 @@ class TeacherController {
     bool earlyRecitation = false,
     bool cumulativeDone = false,
   }) {
+    // هذا الأسلوب القديم لا يزال يعمل إذا كانت sessionService تقبل Map.
+    // لكن يفضل استخدام SessionSubmission لاحقاً.
     return _sessionService.submitFullSession(
       studentSupabaseId: studentSupabaseId,
       groupSupabaseId: groupSupabaseId,
@@ -78,32 +83,36 @@ class TeacherController {
 
   Future<StudentProfile?> getStudentProfile(String userSupabaseId) async {
     final isar = await IsarService.isar;
-    final result = await isar.studentProfiles.filter().userSupabaseIdEqualTo(userSupabaseId).findAll();
+    final result = await isar.collection<StudentProfile>()
+        .filter()
+        .userSupabaseIdEqualTo(userSupabaseId)
+        .toList();
     return result.isNotEmpty ? result.first : null;
   }
 
-  // ✅ خوارزمية جلب التراكمي المقترح (تستدعي الخدمة أوفلاين)
   Future<String> getCumulativeSuggestion(String studentSupabaseId) async {
     return await _sessionService.getSuggestedCumulative(studentSupabaseId);
   }
 
-  // ✅ دالة جديدة: تحديث ورد الطالب محلياً ومزامنته سحابياً
   Future<void> updateStudentTargets(String userSupabaseId, int newTarget, int reviewTarget) async {
     final isar = await IsarService.isar;
     await isar.writeTxn(() async {
-      final profile = await isar.studentProfiles.filter().userSupabaseIdEqualTo(userSupabaseId).findFirst();
+      final profile = await isar.collection<StudentProfile>()
+          .filter()
+          .userSupabaseIdEqualTo(userSupabaseId)
+          .findFirst();
       if (profile != null) {
         profile.newPagesTarget = newTarget;
         profile.reviewPagesTarget = reviewTarget;
         profile.updatedAt = DateTime.now();
-        await isar.studentProfiles.put(profile);
+        await isar.collection<StudentProfile>().put(profile);
       } else {
         final newProfile = StudentProfile()
           ..userSupabaseId = userSupabaseId
           ..newPagesTarget = newTarget
           ..reviewPagesTarget = reviewTarget
           ..updatedAt = DateTime.now();
-        await isar.studentProfiles.put(newProfile);
+        await isar.collection<StudentProfile>().put(newProfile);
       }
     });
 

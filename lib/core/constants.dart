@@ -1,7 +1,7 @@
 class AppConstants {
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-  
+  static const String supabaseUrl = 'https://amxlmcxbncdnwexnwgdd.supabase.co';
+  static const String supabaseAnonKey = 'sb_publishable_aPPgdRGk4a1g_j_JFE6Zow_fGHeT-m4';
+
   static const String tableMosques = 'mosques';
   static const String tableGroups = 'groups';
   static const String tableUsers = 'users';
@@ -15,7 +15,7 @@ class AppConstants {
     DateTime.sunday,
     DateTime.monday,
     DateTime.tuesday,
-    DateTime.wednesday,
+    DateTime.wednesday
   ];
 
   static const double baseAttendancePoints = 2.0;

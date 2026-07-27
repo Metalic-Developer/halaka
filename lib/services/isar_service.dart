@@ -2,7 +2,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/mosque.dart';
 import '../models/group.dart';
-import '../models/user.dart';
+import '../models/local_user.dart';
 import '../models/student_profile.dart';
 import '../models/session.dart';
 import '../models/session_part.dart';
@@ -17,7 +17,7 @@ class IsarService {
         [
           MosqueSchema,
           GroupSchema,
-          UserSchema,
+          LocalUserSchema,
           StudentProfileSchema,
           SessionSchema,
           SessionPartSchema,

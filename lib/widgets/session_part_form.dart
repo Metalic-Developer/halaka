@@ -162,10 +162,7 @@ class _SessionPartFormState extends State<SessionPartForm> {
                 Expanded(
                   child: TextField(
                     controller: widget.controller.ayaStartCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'آية',
-                      errorText: _startAyahError,
-                    ),
+                    decoration: InputDecoration(hintText: 'آية', errorText: _startAyahError),
                     keyboardType: TextInputType.number,
                     onChanged: (_) => _validateStartAyah(),
                   ),
@@ -190,10 +187,7 @@ class _SessionPartFormState extends State<SessionPartForm> {
                 Expanded(
                   child: TextField(
                     controller: widget.controller.ayaEndCtrl,
-                    decoration: InputDecoration(
-                      hintText: 'آية',
-                      errorText: _endAyahError,
-                    ),
+                    decoration: InputDecoration(hintText: 'آية', errorText: _endAyahError),
                     keyboardType: TextInputType.number,
                     onChanged: (_) => _validateEndAyah(),
                   ),

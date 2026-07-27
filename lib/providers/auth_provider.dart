@@ -1,23 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Session, AuthState;
 import '../services/auth_service.dart';
 import '../services/isar_service.dart';
-import '../core/exceptions.dart';
-import '../models/user.dart'; // استيراد النموذج المحلي
+import '../models/local_user.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
-final authStateProvider = StreamProvider<User?>((ref) {
+final authStateProvider = StreamProvider<AuthState?>((ref) {
   final authService = ref.watch(authServiceProvider);
-  return authService.onAuthStateChange.map((state) => state.session?.user);
+  return authService.onAuthStateChange;
 });
 
-// ✅ المزود الجديد: يجلب بيانات المستخدم الكاملة من Isar
-final currentUserProvider = FutureProvider<User?>((ref) async {
-  final supabaseUser = ref.watch(authStateProvider).value;
-  if (supabaseUser == null) return null;
+final currentUserProvider = FutureProvider<LocalUser?>((ref) async {
+  final authState = ref.watch(authStateProvider).value;
+  if (authState?.session?.user == null) return null;
+
+  final supabaseUser = authState!.session!.user;
   final isar = await IsarService.isar;
-  return isar.users.filter().supabaseIdEqualTo(supabaseUser.id).findFirst();
+  return isar.collection<LocalUser>().filter().supabaseIdEqualTo(supabaseUser.id).findFirst();
 });
 
 final authProvider = Provider<AuthController>((ref) => AuthController(ref));
@@ -30,12 +30,9 @@ class AuthController {
 
   Future<void> signIn(String email, String password) async {
     await _authService.signIn(email, password);
-    // يمكن هنا تنزيل بيانات المستخدم إلى Isar بعد الدخول
   }
 
-  Future<void> signOut() async {
-    await _authService.signOut();
-  }
+  Future<void> signOut() async => _authService.signOut();
 
   Session? get currentSession => _authService.currentSession;
 }

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/supabase_config.dart';
-import '../models/user.dart';
+import '../models/local_user.dart';
 import '../models/session.dart';
 import '../services/isar_service.dart';
 
