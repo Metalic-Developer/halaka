@@ -31,34 +31,46 @@ class QuranDatabaseService {
   Future<void> _copyDatabaseInBackground(String dbPath) async {
     final data = await rootBundle.load('assets/quran.db');
     final bytes = data.buffer.asUint8List();
-    // استخدام Isolate.run لعزل عملية الكتابة (Flutter 3.7+)
     await Isolate.run(() async {
       await File(dbPath).writeAsBytes(bytes);
     });
   }
 
+  // ✅ التعديل هنا: إضافة ayah_count
   Future<List<Map<String, dynamic>>> getSurahs() async {
     final db = await database;
-    final result = await db.rawQuery(
-      'SELECT DISTINCT sora, sora_name_ar FROM quran_index ORDER BY sora',
+    return await db.rawQuery(
+      'SELECT sora, sora_name_ar, '
+      '(SELECT COUNT(*) FROM quran_index WHERE sora = qi.sora) as ayah_count '
+      'FROM quran_index qi GROUP BY sora ORDER BY sora',
     );
-    return result;
   }
 
+  // باقي الدوال كما هي بدون تغيير
   Future<List<int>> getPages(
     int suraStart, int ayaStart,
     int suraEnd, int ayaEnd,
   ) async {
     final db = await database;
-    final result = await db.rawQuery('''
-      SELECT DISTINCT page FROM quran_index
-      WHERE 
-        (sora = ? AND aya_no >= ?) OR
-        (sora > ? AND sora < ?) OR
-        (sora = ? AND aya_no <= ?)
-      ORDER BY page
-    ''', [suraStart, ayaStart, suraStart, suraEnd, suraEnd, ayaEnd]);
-    return result.map<int>((row) => row['page'] as int).toList();
+
+    if (suraStart == suraEnd) {
+      final result = await db.rawQuery('''
+        SELECT DISTINCT page FROM quran_index
+        WHERE sora = ? AND aya_no >= ? AND aya_no <= ?
+        ORDER BY page
+      ''', [suraStart, ayaStart, ayaEnd]);
+      return result.map<int>((row) => row['page'] as int).toList();
+    } else {
+      final result = await db.rawQuery('''
+        SELECT DISTINCT page FROM quran_index
+        WHERE 
+          (sora = ? AND aya_no >= ?) OR
+          (sora > ? AND sora < ?) OR
+          (sora = ? AND aya_no <= ?)
+        ORDER BY page
+      ''', [suraStart, ayaStart, suraStart, suraEnd, suraEnd, ayaEnd]);
+      return result.map<int>((row) => row['page'] as int).toList();
+    }
   }
 
   Future<double> calculatePages(

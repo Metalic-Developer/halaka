@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_provider.dart';
 import '../screens/splash_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
@@ -19,8 +18,6 @@ class AppRouter {
   static const String managerDashboard = '/manager-dashboard';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    // نستخدم context لاستخراج ref لاحقاً، لكن هنا لا نملك ref مباشراً.
-    // سنترك الحراسة الفعلية في Splash ونكتفي بتوليد المسارات.
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -29,33 +26,15 @@ class AppRouter {
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
       case teacherDashboard:
-        return _guardedRoute(const TeacherDashboard(), 'teacher');
+        return MaterialPageRoute(builder: (_) => const TeacherDashboard());
       case studentDashboard:
-        return _guardedRoute(const StudentDashboard(), 'student');
+        return MaterialPageRoute(builder: (_) => const StudentDashboard());
       case guardianDashboard:
-        return _guardedRoute(const GuardianDashboard(), 'guardian');
+        return MaterialPageRoute(builder: (_) => const GuardianDashboard());
       case managerDashboard:
-        return _guardedRoute(const ManagerDashboard(), 'manager');
+        return MaterialPageRoute(builder: (_) => const ManagerDashboard());
       default:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
     }
-  }
-
-  static MaterialPageRoute _guardedRoute(Widget page, String requiredRole) {
-    return MaterialPageRoute(
-      builder: (context) {
-        // الحصول على ref من ProviderScope
-        final container = ProviderScope.containerOf(context);
-        final authState = container.read(authStateProvider).valueOrNull;
-        if (authState == null || authState.role != requiredRole) {
-          // توجيه إلى Splash ليعيد التوجيه الصحيح
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, splash);
-          });
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        return page;
-      },
-    );
   }
 }

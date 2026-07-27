@@ -6,10 +6,13 @@ class Helpers {
   }
 
   static DateTime getWeekStart(DateTime date) {
-    return date.subtract(Duration(days: date.weekday - DateTime.saturday));
+    // عدد الأيام من السبت الماضي (بإزاحة دائرية)
+    final daysSinceSaturday = (date.weekday - DateTime.saturday + 7) % 7;
+    return date.subtract(Duration(days: daysSinceSaturday));
   }
 
   static bool isHalaqaDay(DateTime date) {
-    return [DateTime.saturday, DateTime.sunday, DateTime.monday, DateTime.tuesday, DateTime.wednesday].contains(date.weekday);
+    return [DateTime.saturday, DateTime.sunday, DateTime.monday,
+            DateTime.tuesday, DateTime.wednesday].contains(date.weekday);
   }
 }

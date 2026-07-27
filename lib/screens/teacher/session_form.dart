@@ -12,6 +12,10 @@ final surahsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   return db.getSurahs();
 });
 
+final cumulativeSuggestionProvider = FutureProvider.family<String, String>((ref, studentId) {
+  return ref.read(teacherProvider).getCumulativeSuggestion(studentId);
+});
+
 class SessionForm extends ConsumerStatefulWidget {
   final User student;
   const SessionForm({super.key, required this.student});
@@ -77,7 +81,10 @@ class _SessionFormState extends ConsumerState<SessionForm> {
       }
     }
 
-    if (partsData.isEmpty) return;
+    if (partsData.isEmpty && !_earlyAttendance && !_earlyRecitation && !_onTimeDeparture && !_cumulativeDone) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الرجاء إدخال بيانات التسميع أو الحضور.')));
+      return;
+    }
 
     await ref.read(teacherProvider).submitFullSession(
       studentSupabaseId: widget.student.supabaseId,
@@ -97,6 +104,7 @@ class _SessionFormState extends ConsumerState<SessionForm> {
   @override
   Widget build(BuildContext context) {
     final surahsAsync = ref.watch(surahsProvider);
+    final suggestionAsync = ref.watch(cumulativeSuggestionProvider(widget.student.supabaseId));
 
     return Scaffold(
       appBar: AppBar(title: Text('جلسة ${widget.student.fullName}')),
@@ -108,13 +116,30 @@ class _SessionFormState extends ConsumerState<SessionForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // مربع التراكمي المقترح
+                suggestionAsync.when(
+                  data: (sug) => Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12.0),
+                    margin: const EdgeInsets.only(bottom: 8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.teal.shade200),
+                    ),
+                    child: Text('📌 التراكمي المقترح:\n$sug', style: TextStyle(color: Colors.teal.shade900)),
+                  ),
+                  loading: () => const SizedBox(),
+                  error: (_, __) => const SizedBox(),
+                ),
                 CheckboxListTile(
                   title: const Text(AppStrings.doneCumulative),
                   value: _cumulativeDone,
                   onChanged: (v) => setState(() => _cumulativeDone = v ?? false),
                 ),
-                Text(AppStrings.newMemorization,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                const Text(AppStrings.newMemorization,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 surahsAsync.when(
                   data: (surahs) => Column(
                     children: _newParts.asMap().entries.map((entry) {
@@ -142,8 +167,8 @@ class _SessionFormState extends ConsumerState<SessionForm> {
                   label: const Text('إضافة تسميع منفصل'),
                 ),
                 const Divider(),
-                Text(AppStrings.review,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(AppStrings.review,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 surahsAsync.when(
                   data: (surahs) => Column(
                     children: _reviewParts.asMap().entries.map((entry) {
@@ -184,10 +209,11 @@ class _SessionFormState extends ConsumerState<SessionForm> {
                 const SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
-                    onPressed: _cumulativeDone ? _submit : null,
+                    onPressed: _submit,
                     child: const Text('حفظ الجلسة'),
                   ),
                 ),
+                const SizedBox(height: 40),
               ],
             ),
           ),

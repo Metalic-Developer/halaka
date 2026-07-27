@@ -4,6 +4,7 @@ import '../../providers/teacher_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user.dart';
 import '../../widgets/student_card.dart';
+import '../../utils/helpers.dart';
 import 'session_form.dart';
 
 final groupStudentsProvider = FutureProvider.family<List<User>, String>((ref, groupId) {
@@ -24,6 +25,9 @@ class DaySessionList extends ConsumerWidget {
       appBar: AppBar(title: const Text('حلقة اليوم - قائمة الطلاب')),
       body: studentsAsync.when(
         data: (students) {
+          if (students.isEmpty) {
+            return const Center(child: Text('لا يوجد طلاب في مجموعتك حالياً.'));
+          }
           final isWide = MediaQuery.of(context).size.width > 600;
           if (isWide) {
             return GridView.builder(
@@ -35,12 +39,12 @@ class DaySessionList extends ConsumerWidget {
                 mainAxisSpacing: 16,
               ),
               itemCount: students.length,
-              itemBuilder: (context, index) => _buildStudentCard(context, students[index]),
+              itemBuilder: (context, index) => _StudentCardWrapper(student: students[index]),
             );
           }
           return ListView.builder(
             itemCount: students.length,
-            itemBuilder: (context, index) => _buildStudentCard(context, students[index]),
+            itemBuilder: (context, index) => _StudentCardWrapper(student: students[index]),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -48,24 +52,34 @@ class DaySessionList extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildStudentCard(BuildContext context, User student) {
-    return StudentCard(
-      student: student,
-      attendancePercent: _calculateAttendance(student),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => SessionForm(student: student),
-          ),
-        );
-      },
+class _StudentCardWrapper extends ConsumerWidget {
+  final User student;
+  const _StudentCardWrapper({required this.student});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = DateTime.now();
+    final weekStart = Helpers.getWeekStart(now);
+    // جلب الحضور الحقيقي من قواعد البيانات
+    final attendanceAsync = ref.watch(studentAttendanceProvider((studentId: student.supabaseId, weekStart: weekStart)));
+
+    return attendanceAsync.when(
+      data: (percent) => StudentCard(
+        student: student,
+        attendancePercent: percent,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SessionForm(student: student),
+            ),
+          );
+        },
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => StudentCard(student: student, attendancePercent: 0),
     );
-  }
-
-  double _calculateAttendance(User student) {
-    // ستُستبدل بالحساب الحقيقي من Isar
-    return 100.0;
   }
 }

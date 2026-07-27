@@ -27,10 +27,10 @@ class SyncService {
     try {
       final isar = await IsarService.isar;
 
-      // ✅ منع المسح إذا كانت هناك جلسات غير مرفوعة
+      // منع المسح إذا كانت هناك جلسات غير مرفوعة
       final unsynced = await _sessionService.getUnsyncedSessions();
       if (unsynced.isNotEmpty) {
-        throw SyncException('توجد جلسات غير مزامنة. ارفعها أولاً.');
+        throw SyncException('توجد جلسات غير مزامنة. ارفعها للإنترنت أولاً قبل السحب.');
       }
 
       final userRows = await _client.from('users').select();
@@ -64,10 +64,30 @@ class SyncService {
         ..userSupabaseId = r['user_id'] as String
         ..newPagesTarget = r['new_pages_target'] as int
         ..reviewPagesTarget = r['review_pages_target'] as int
+        ..guardianSupabaseId = r['guardian_id'] as String?   // ✅ إضافة
         ..updatedAt = DateTime.tryParse(r['updated_at'] ?? '')
       ).toList();
 
+      final sessionRows = await _client.from('sessions').select();
+      final remoteSessions = (sessionRows as List).map((r) => Session()
+        ..supabaseId = r['id']
+        ..studentSupabaseId = r['student_id']
+        ..groupSupabaseId = r['group_id']
+        ..teacherSupabaseId = r['teacher_id']
+        ..sessionDate = DateTime.parse(r['session_date'])
+        ..earlyAttendance = r['early_attendance'] ?? false
+        ..onTimeDeparture = r['on_time_departure'] ?? false
+        ..earlyRecitation = r['early_recitation'] ?? false
+        ..cumulativeDone = r['cumulative_done'] ?? false
+        ..totalPoints = (r['total_points'] as num).toDouble()
+        ..isSynced = true
+        ..createdAt = DateTime.tryParse(r['created_at'] ?? '')
+      ).toList();
+
+      final partRows = await _client.from('session_parts').select();
+
       await isar.writeTxn(() async {
+        // استخدام putAll مع clear لأنها عملية استبدال كاملة
         await isar.users.clear();
         await isar.users.putAll(users);
         await isar.mosques.clear();
@@ -76,6 +96,31 @@ class SyncService {
         await isar.groups.putAll(groups);
         await isar.studentProfiles.clear();
         await isar.studentProfiles.putAll(studentProfiles);
+
+        await isar.sessions.clear();
+        await isar.sessions.putAll(remoteSessions);
+
+        final sessionMap = { for (var s in remoteSessions) s.supabaseId: s.id };
+
+        final remoteParts = (partRows as List).map((r) {
+           final sId = r['session_id'];
+           return SessionPart()
+             ..sessionLocalId = sessionMap[sId] ?? -1
+             ..supabaseId = r['id']
+             ..type = r['type']                 // يخزّن كنص (int) في Isar لكننا سنحوّله لـ SessionType
+             ..suraStart = r['sura_start']
+             ..ayaStart = r['aya_start']
+             ..suraEnd = r['sura_end']
+             ..ayaEnd = r['aya_end']
+             ..pagesCount = (r['pages_count'] as num).toDouble()
+             ..isExtra = r['is_extra'] ?? false
+             ..evaluation = r['evaluation']
+             ..notes = r['notes']
+             ..isSynced = true;
+        }).where((p) => p.sessionLocalId != -1).toList();
+
+        await isar.sessionParts.clear();
+        await isar.sessionParts.putAll(remoteParts);
       });
     } catch (e) {
       throw SyncException('فشل سحب البيانات: $e');
@@ -107,13 +152,13 @@ class SyncService {
           'total_points': session.totalPoints,
         };
 
-        await _client.from('sessions').insert(sessionData);
+        await _client.from('sessions').upsert(sessionData, onConflict: 'student_id, session_date');
 
         for (var part in parts) {
-          await _client.from('session_parts').insert({
+          await _client.from('session_parts').upsert({
             'id': part.supabaseId,
             'session_id': session.supabaseId,
-            'type': part.type,
+            'type': part.type.name,             // تحويل enum إلى نص
             'sura_start': part.suraStart,
             'aya_start': part.ayaStart,
             'sura_end': part.suraEnd,

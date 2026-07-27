@@ -7,10 +7,11 @@ import '../core/strings.dart';
 final teacherRegistrationEnabledProvider = FutureProvider<bool>((ref) async {
   try {
     final res = await SupabaseConfig.client
-        .from('settings')
-        .select('teacher_registration')
-        .single();
-    return res['teacher_registration'] == true;
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'teacher_registration_open')
+        .maybeSingle();
+    return res != null && res['value'] == 'true';
   } catch (_) {
     return false;
   }
@@ -88,10 +89,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                TextFormField(controller: _nameController, decoration: ...),
-                TextFormField(controller: _emailController, ...),
-                TextFormField(controller: _passwordController, ...),
-                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _nameController, 
+                  decoration: const InputDecoration(labelText: 'الاسم الكامل')
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailController, 
+                  decoration: const InputDecoration(labelText: 'البريد الإلكتروني'),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController, 
+                  decoration: const InputDecoration(labelText: 'كلمة المرور'),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 16),
                 teacherEnabled.when(
                   data: (enabled) => DropdownButtonFormField<String>(
                     value: _role,
@@ -106,10 +120,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   loading: () => const LinearProgressIndicator(),
                   error: (_, __) => const SizedBox(),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _loading ? null : _register,
                   child: _loading ? const CircularProgressIndicator() : const Text(AppStrings.register),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                  child: const Text('لدي حساب بالفعل؟ سجل دخولك'),
                 ),
               ],
             ),
