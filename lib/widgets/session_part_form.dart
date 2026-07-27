@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/session_part.dart';
+import '../models/session_part.dart';
 import 'searchable_dropdown.dart';
 
 class SessionPartWidgetController {
@@ -54,13 +54,13 @@ class SessionPartData {
   });
 }
 
-class SessionPartWidget extends StatefulWidget {
+class SessionPartForm extends StatefulWidget {
   final SessionPartWidgetController controller;
-  final SessionType partType;               // نوع الجزء (memorization, cumulative, review)
-  final List<Map<String, dynamic>> surahs;  // تحتوي كل خريطة على sora, sora_name_ar, ayah_count
+  final SessionType partType;
+  final List<Map<String, dynamic>> surahs;
   final VoidCallback? onDelete;
 
-  const SessionPartWidget({
+  const SessionPartForm({
     super.key,
     required this.controller,
     required this.partType,
@@ -69,19 +69,33 @@ class SessionPartWidget extends StatefulWidget {
   });
 
   @override
-  State<SessionPartWidget> createState() => _SessionPartWidgetState();
+  State<SessionPartForm> createState() => _SessionPartFormState();
 }
 
-class _SessionPartWidgetState extends State<SessionPartWidget> {
+class _SessionPartFormState extends State<SessionPartForm> {
   String? _startAyahError;
   String? _endAyahError;
+  String? _rangeError;
 
   bool _isAyahValid(int sura, int ayah) {
     final surah = widget.surahs.firstWhere((s) => s['sora'] == sura, orElse: () => {});
     if (surah.isEmpty) return false;
     final ayahCount = surah['ayah_count'] as int?;
-    if (ayahCount == null) return true; // لا نستطيع التحقق
+    if (ayahCount == null) return true;
     return ayah >= 1 && ayah <= ayahCount;
+  }
+
+  String? _validateRange() {
+    final sStart = int.tryParse(widget.controller.surahStartCtrl.text);
+    final aStart = int.tryParse(widget.controller.ayaStartCtrl.text);
+    final sEnd = int.tryParse(widget.controller.surahEndCtrl.text);
+    final aEnd = int.tryParse(widget.controller.ayaEndCtrl.text);
+    if (sStart == null || aStart == null || sEnd == null || aEnd == null) return null;
+
+    if (sStart < sEnd) return null;
+    if (sStart > sEnd) return 'سورة البداية بعد سورة النهاية';
+    if (aStart > aEnd) return 'آية البداية بعد آية النهاية';
+    return null;
   }
 
   void _validateStartAyah() {
@@ -89,7 +103,8 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
     final ayah = int.tryParse(widget.controller.ayaStartCtrl.text);
     if (sura != null && ayah != null) {
       setState(() {
-        _startAyahError = _isAyahValid(sura, ayah) ? null : 'الآية غير موجودة في هذه السورة';
+        _startAyahError = _isAyahValid(sura, ayah) ? null : 'الآية غير موجودة';
+        _rangeError = _validateRange();
       });
     }
   }
@@ -99,7 +114,8 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
     final ayah = int.tryParse(widget.controller.ayaEndCtrl.text);
     if (sura != null && ayah != null) {
       setState(() {
-        _endAyahError = _isAyahValid(sura, ayah) ? null : 'الآية غير موجودة في هذه السورة';
+        _endAyahError = _isAyahValid(sura, ayah) ? null : 'الآية غير موجودة';
+        _rangeError = _validateRange();
       });
     }
   }
@@ -123,6 +139,11 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
                   ),
               ],
             ),
+            if (_rangeError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(_rangeError!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+              ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -133,7 +154,7 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
                     hint: 'من سورة',
                     onChanged: (val) {
                       widget.controller.surahStartCtrl.text = val?['sora'].toString() ?? '';
-                      setState(() => _startAyahError = null);
+                      _validateStartAyah();
                     },
                   ),
                 ),
@@ -146,9 +167,7 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
                       errorText: _startAyahError,
                     ),
                     keyboardType: TextInputType.number,
-                    onChanged: (_) {
-                      _validateStartAyah();
-                    },
+                    onChanged: (_) => _validateStartAyah(),
                   ),
                 ),
               ],
@@ -163,7 +182,7 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
                     hint: 'إلى سورة',
                     onChanged: (val) {
                       widget.controller.surahEndCtrl.text = val?['sora'].toString() ?? '';
-                      setState(() => _endAyahError = null);
+                      _validateEndAyah();
                     },
                   ),
                 ),
@@ -176,9 +195,7 @@ class _SessionPartWidgetState extends State<SessionPartWidget> {
                       errorText: _endAyahError,
                     ),
                     keyboardType: TextInputType.number,
-                    onChanged: (_) {
-                      _validateEndAyah();
-                    },
+                    onChanged: (_) => _validateEndAyah(),
                   ),
                 ),
               ],

@@ -248,6 +248,12 @@
       "languageVersion": "3.8"
     },
     {
+      "name": "flutter_localizations",
+      "rootUri": "file:///home/codespace/flutter/packages/flutter_localizations",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
       "name": "flutter_riverpod",
       "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/flutter_riverpod-2.6.1",
       "packageUri": "lib/",
@@ -351,9 +357,9 @@
     },
     {
       "name": "intl",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/intl-0.20.3",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/intl-0.20.2",
       "packageUri": "lib/",
-      "languageVersion": "3.9"
+      "languageVersion": "3.3"
     },
     {
       "name": "io",
@@ -381,13 +387,19 @@
     },
     {
       "name": "jni",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/jni-1.0.0",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/jni-1.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
     {
       "name": "jni_flutter",
       "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/jni_flutter-1.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "jni_util",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/jni_util-1.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -477,7 +489,7 @@
     },
     {
       "name": "objective_c",
-      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/objective_c-9.4.1",
+      "rootUri": "file:///home/codespace/.pub-cache/hosted/pub.dev/objective_c-9.5.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },

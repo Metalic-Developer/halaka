@@ -6,6 +6,35 @@ enum SessionType {
   memorization,
   cumulative,
   review,
+  unknown,
+}
+
+extension SessionTypeMapper on SessionType {
+  String toDatabase() {
+    switch (this) {
+      case SessionType.memorization:
+        return 'memorization';
+      case SessionType.cumulative:
+        return 'cumulative';
+      case SessionType.review:
+        return 'review';
+      case SessionType.unknown:
+        return 'unknown';
+    }
+  }
+
+  static SessionType fromDatabase(String value) {
+    switch (value) {
+      case 'memorization':
+        return SessionType.memorization;
+      case 'cumulative':
+        return SessionType.cumulative;
+      case 'review':
+        return SessionType.review;
+      default:
+        return SessionType.unknown;
+    }
+  }
 }
 
 @collection
@@ -26,7 +55,7 @@ class SessionPart {
   late int suraEnd;
   late int ayaEnd;
   double pagesCount = 0;
-  bool isExtra = false;         // إذا true يكون إضافيًا
+  bool isExtra = false;
   String? evaluation;
   String? notes;
 

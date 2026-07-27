@@ -1,9 +1,7 @@
 class AppConstants {
-  // مفاتيح Supabase
   static const String supabaseUrl = 'YOUR_SUPABASE_URL';
   static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
   
-  // أسماء الجداول (لتجنب الأخطاء الإملائية)
   static const String tableMosques = 'mosques';
   static const String tableGroups = 'groups';
   static const String tableUsers = 'users';
@@ -12,6 +10,20 @@ class AppConstants {
   static const String tableSessions = 'sessions';
   static const String tableSessionParts = 'session_parts';
 
-  // الأيام المخصصة للحلقة
-  static const List<int> halaqaDays = [DateTime.saturday, DateTime.sunday, DateTime.monday, DateTime.tuesday, DateTime.wednesday];
+  static const List<int> halaqaDays = [
+    DateTime.saturday,
+    DateTime.sunday,
+    DateTime.monday,
+    DateTime.tuesday,
+    DateTime.wednesday,
+  ];
+
+  static const double baseAttendancePoints = 2.0;
+  static const double earlyAttendanceBonus = 2.0;
+  static const double onTimeDepartureBonus = 2.0;
+  static const double earlyRecitationBonus = 2.0;
+  static const double completionNewPoints = 4.0;
+  static const double extraNewPointsPer5 = 6.0;
+  static const double completionCumulativeReviewPoints = 6.0;
+  static const double extraReviewPointsPer50 = 8.0;
 }

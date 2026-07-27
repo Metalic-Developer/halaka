@@ -4,9 +4,10 @@ import '../models/session.dart';
 import '../models/session_part.dart';
 import '../models/student_profile.dart';
 import '../core/exceptions.dart';
+import '../core/app_constants.dart';
 import 'isar_service.dart';
 import 'quran_database_service.dart';
-import 'session_submission.dart';
+import '../models/session_submission.dart';
 
 class SessionService {
   final _uuid = const Uuid();
@@ -15,7 +16,6 @@ class SessionService {
     final isar = await IsarService.isar;
     final db = QuranDatabaseService();
 
-    // ✅ منع التكرار
     final existing = await isar.sessions.filter()
         .studentSupabaseIdEqualTo(submission.studentSupabaseId)
         .and()
@@ -31,9 +31,9 @@ class SessionService {
         .findFirst();
     if (profile == null) throw DatabaseException('ملف الطالب غير موجود');
 
-    // ✅ حساب التراكمي المطلوب من آخر جلستين
     final requiredCumulative = await _calculateRequiredCumulative(
-      submission.studentSupabaseId, submission.sessionDate);
+      submission.studentSupabaseId, submission.sessionDate,
+    );
 
     Session? session;
 
@@ -79,7 +79,6 @@ class SessionService {
 
         await isar.sessionParts.put(part);
 
-        // تجميع الصفحات
         switch (partData.type) {
           case SessionType.memorization:
             if (partData.isExtra) {
@@ -102,36 +101,39 @@ class SessionService {
               reviewBasePages += pages;
             }
             break;
+          case SessionType.unknown:
+            break;
         }
       }
 
-      // ✅ حساب النقاط مطابقة للـ Blueprint
-      double total = 2.0; // نقاط الحضور الأساسية
-      if (submission.earlyAttendance) total += 2;
-      if (submission.onTimeDeparture) total += 2;
-      if (submission.earlyRecitation) total += 2;
+      double total = AppConstants.baseAttendancePoints;
+      if (submission.earlyAttendance) total += AppConstants.earlyAttendanceBonus;
+      if (submission.onTimeDeparture) total += AppConstants.onTimeDepartureBonus;
+      if (submission.earlyRecitation) total += AppConstants.earlyRecitationBonus;
 
-      // الحفظ الجديد
       final newTarget = profile.newPagesTarget.toDouble();
-      final newAchieved = newBasePages;
-      if (newTarget > 0 && newAchieved >= newTarget) {
-        total += 4;
-        final extraNew = (newAchieved + newExtraPages) - newTarget;
-        if (extraNew > 0) total += (6.0 / 5.0) * extraNew;
+      double newAchieved = newBasePages;
+      if (newTarget > 0) {
+        double completionRatio = (newAchieved / newTarget).clamp(0.0, 1.0);
+        total += completionRatio * AppConstants.completionNewPoints;
+        double extraNew = (newAchieved + newExtraPages) - newTarget;
+        if (extraNew > 0) {
+          total += (AppConstants.extraNewPointsPer5 / 5.0) * extraNew;
+        }
       }
 
-      // التراكمي + المراجعة (معًا)
       final reviewTarget = profile.reviewPagesTarget.toDouble();
-      final totalCumulative = cumulativeBasePages + cumulativeExtraPages;
-      final totalReview = reviewBasePages + reviewExtraPages;
-      final combinedAchieved = totalCumulative + totalReview;
-      final combinedRequired = requiredCumulative + reviewTarget;
-
-      if (combinedRequired > 0 && combinedAchieved >= combinedRequired) {
-        total += 6;
-        // الإضافي في المراجعة فقط
-        final reviewExtraOnly = totalReview - reviewTarget;
-        if (reviewExtraOnly > 0) total += (8.0 / 50.0) * reviewExtraOnly;
+      double totalCumulative = cumulativeBasePages + cumulativeExtraPages;
+      double totalReview = reviewBasePages + reviewExtraPages;
+      double combinedAchieved = totalCumulative + totalReview;
+      double combinedRequired = requiredCumulative + reviewTarget;
+      if (combinedRequired > 0) {
+        double combinedRatio = (combinedAchieved / combinedRequired).clamp(0.0, 1.0);
+        total += combinedRatio * AppConstants.completionCumulativeReviewPoints;
+        double reviewExtraOnly = totalReview - reviewTarget;
+        if (reviewExtraOnly > 0) {
+          total += (AppConstants.extraReviewPointsPer50 / 50.0) * reviewExtraOnly;
+        }
       }
 
       session!.totalPoints = total;
@@ -141,7 +143,6 @@ class SessionService {
     return session!;
   }
 
-  /// يحسب مجموع صفحات الحفظ الجديد (memorization + extra) من آخر جلستين فعليتين للطالب
   Future<double> _calculateRequiredCumulative(String studentSupabaseId, DateTime beforeDate) async {
     final isar = await IsarService.isar;
     final today = DateTime(beforeDate.year, beforeDate.month, beforeDate.day);
@@ -160,20 +161,63 @@ class SessionService {
     final parts = await isar.sessionParts.filter()
         .anyOf(sessionIds, (q, int id) => q.sessionLocalIdEqualTo(id))
         .and()
-        .typeEqualTo(SessionType.memorization)   // أي نوع memorization (أساسي أو إضافي)
+        .typeEqualTo(SessionType.memorization)
         .findAll();
 
     return parts.fold<double>(0, (sum, p) => sum + p.pagesCount);
   }
 
-  // باقي الدوال كما هي (getUnsyncedSessions, getSuggestedCumulative...)
   Future<List<Session>> getUnsyncedSessions() async {
     final isar = await IsarService.isar;
     return isar.sessions.where().isSyncedEqualTo(false).findAll();
   }
 
   Future<String> getSuggestedCumulative(String studentSupabaseId) async {
-    // يمكن تركها كما هي أو تحسينها
-    return '';
+    final isar = await IsarService.isar;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final lastSessions = await isar.sessions.filter()
+        .studentSupabaseIdEqualTo(studentSupabaseId)
+        .and()
+        .sessionDateLessThan(today)
+        .sortBySessionDateDesc()
+        .limit(2)
+        .findAll();
+
+    if (lastSessions.isEmpty) return 'لا يوجد بيانات لجلسات سابقة';
+
+    final sessionIds = lastSessions.map((s) => s.id).toList();
+    final newParts = await isar.sessionParts.filter()
+        .anyOf(sessionIds, (q, int id) => q.sessionLocalIdEqualTo(id))
+        .and()
+        .typeEqualTo(SessionType.memorization)
+        .findAll();
+
+    if (newParts.isEmpty) return 'لم يأخذ حفظاً جديداً في الجلستين السابقتين';
+
+    final db = QuranDatabaseService();
+    final surahs = await db.getSurahs();
+    Map<int, String> surahNames = {};
+    for (var s in surahs) {
+      surahNames[s['sora'] as int] = s['sora_name_ar'] as String;
+    }
+
+    int minSura = 115, minAya = 999;
+    int maxSura = 0, maxAya = 0;
+    for (var p in newParts) {
+      if (p.suraStart < minSura || (p.suraStart == minSura && p.ayaStart < minAya)) {
+        minSura = p.suraStart;
+        minAya = p.ayaStart;
+      }
+      if (p.suraEnd > maxSura || (p.suraEnd == maxSura && p.ayaEnd > maxAya)) {
+        maxSura = p.suraEnd;
+        maxAya = p.ayaEnd;
+      }
+    }
+
+    final nameStart = surahNames[minSura] ?? 'سورة $minSura';
+    final nameEnd = surahNames[maxSura] ?? 'سورة $maxSura';
+    return 'من $nameStart آية $minAya إلى $nameEnd آية $maxAya';
   }
 }

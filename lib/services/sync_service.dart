@@ -6,7 +6,7 @@ import '../models/session.dart';
 import '../models/session_part.dart';
 import '../models/mosque.dart';
 import '../models/group.dart';
-import '../models/user.dart';
+import '../models/local_user.dart';
 import '../models/student_profile.dart';
 import 'isar_service.dart';
 import 'session_service.dart';
@@ -27,14 +27,13 @@ class SyncService {
     try {
       final isar = await IsarService.isar;
 
-      // منع المسح إذا كانت هناك جلسات غير مرفوعة
       final unsynced = await _sessionService.getUnsyncedSessions();
       if (unsynced.isNotEmpty) {
         throw SyncException('توجد جلسات غير مزامنة. ارفعها للإنترنت أولاً قبل السحب.');
       }
 
       final userRows = await _client.from('users').select();
-      final users = (userRows as List).map((r) => User()
+      final users = (userRows as List).map((r) => LocalUser()
         ..supabaseId = r['id'] as String
         ..email = r['email'] ?? ''
         ..fullName = r['full_name'] ?? ''
@@ -64,7 +63,7 @@ class SyncService {
         ..userSupabaseId = r['user_id'] as String
         ..newPagesTarget = r['new_pages_target'] as int
         ..reviewPagesTarget = r['review_pages_target'] as int
-        ..guardianSupabaseId = r['guardian_id'] as String?   // ✅ إضافة
+        ..guardianSupabaseId = r['guardian_id'] as String?
         ..updatedAt = DateTime.tryParse(r['updated_at'] ?? '')
       ).toList();
 
@@ -87,9 +86,8 @@ class SyncService {
       final partRows = await _client.from('session_parts').select();
 
       await isar.writeTxn(() async {
-        // استخدام putAll مع clear لأنها عملية استبدال كاملة
-        await isar.users.clear();
-        await isar.users.putAll(users);
+        await isar.localUsers.clear();
+        await isar.localUsers.putAll(users);
         await isar.mosques.clear();
         await isar.mosques.putAll(mosques);
         await isar.groups.clear();
@@ -107,7 +105,7 @@ class SyncService {
            return SessionPart()
              ..sessionLocalId = sessionMap[sId] ?? -1
              ..supabaseId = r['id']
-             ..type = r['type']                 // يخزّن كنص (int) في Isar لكننا سنحوّله لـ SessionType
+             ..type = SessionTypeMapper.fromDatabase(r['type'] ?? '')
              ..suraStart = r['sura_start']
              ..ayaStart = r['aya_start']
              ..suraEnd = r['sura_end']
@@ -152,13 +150,27 @@ class SyncService {
           'total_points': session.totalPoints,
         };
 
-        await _client.from('sessions').upsert(sessionData, onConflict: 'student_id, session_date');
+        try {
+          await _client.from('sessions').upsert(sessionData, onConflict: 'student_id, session_date');
+        } on PostgrestException catch (e) {
+          if (e.code == '23505') {
+            await isar.writeTxn(() async {
+              await isar.sessions.delete(session.id);
+              for (var part in parts) {
+                await isar.sessionParts.delete(part.id);
+              }
+            });
+            continue;
+          } else {
+            rethrow;
+          }
+        }
 
         for (var part in parts) {
           await _client.from('session_parts').upsert({
             'id': part.supabaseId,
             'session_id': session.supabaseId,
-            'type': part.type.name,             // تحويل enum إلى نص
+            'type': part.type.toDatabase(),
             'sura_start': part.suraStart,
             'aya_start': part.ayaStart,
             'sura_end': part.suraEnd,

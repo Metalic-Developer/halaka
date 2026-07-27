@@ -1,9 +1,9 @@
 import 'package:isar/isar.dart';
 
-part 'user.g.dart';
+part 'local_user.g.dart';
 
 @collection
-class User {
+class LocalUser {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true, replace: true)
